@@ -1,0 +1,864 @@
+# ViRU5 V5 - MERGED IMPLEMENTATION PLAN
+## Combining KIMI + DEEPSEEK Recommendations
+## Version: 1.0 | Date: 2026-03-04
+## Target: 6-7 weeks, 60 FPS, emergent gameplay
+
+---
+
+## 🎯 CRITICAL DECISIONS (Architecture)
+
+### 1. Data Structure: Hybrid SoA (Structure of Arrays)
+
+**Decision:** Use KIMI's flat arrays for performance, with DEEPSEEK's genome references
+
+```typescript
+// BattleManager.ts - Core data structures
+export class BattleManager {
+  // FLAT ARRAYS for performance (KIMI's recommendation)
+  private owners: Uint8Array(2560);           // Which player (0-4)
+  private hp: Float32Array(2560);             // Current HP
+  private genomeIds: Uint16Array(2560);       // Reference to genome pool
+  private states: Uint8Array(2560);           // BiologicalState enum
+  private positions: Float32Array(2560 * 2);  // x,y coordinates
+
+  // OBJECT POOL for genomes (DEEPSEEK's genome-centric design)
+  private genomes: Map<string, ViralGenome> = new Map();
+  private cellStates: CellState[] = [];       // Per-cell mutable state
+
+  // CHUNKED environment (KIMI's optimization)
+  private environmentChunks: EnvironmentChunk[][] = [];  // 8x8 cells per chunk
+}
+```
+
+**Why:** Flat arrays = cache-friendly, 10x faster than array of objects. Genome references = shared state, less memory.
+
+---
+
+### 2. Rendering: 4-Layer PixiJS v8 Approach
+
+**Decision:** KIMI's layered rendering with DEEPSEEK's shader effects
+
+```typescript
+// BattleRenderer.ts - Layer architecture
+export class BattleRenderer {
+  // LAYER 1: Static grid (cached bitmap)
+  private gridLayer: PIXI.Container;
+  gridLayer.cacheAsBitmap = true;  // Update only when environment changes
+
+  // LAYER 2: Cell bodies (ParticleContainer - 2560 cells)
+  private cellLayer: PIXI.ParticleContainer;
+  cellLayer = new PIXI.ParticleContainer({
+    dynamicProperties: {
+      position: true,   // For mobility jumps
+      scale: true,      // Growth animation
+      color: true,      // State changes
+      alpha: true       // Latent states
+    }
+  });
+
+  // LAYER 3: Dynamic effects (standard container)
+  private fxLayer: PIXI.Container;
+  // Combat sparks, infestation particles, synergy auras
+
+  // LAYER 4: UI overlay
+  private uiLayer: PIXI.Container;
+  // Text popups, chaos announcements
+}
+```
+
+**Why:** ParticleContainer handles 1M+ particles at 60 FPS. Use for cells, not Graphics.
+
+---
+
+## 📋 PHASED IMPLEMENTATION (Step-by-Step)
+
+### PHASE 0: Foundation Refactoring (Week 1)
+**Goal:** Prepare architecture without changing gameplay
+
+#### Step 0.1: Flatten Grid Data
+**File:** `client/src/features/battle/BattleManager.ts`
+
+**Changes:**
+```typescript
+// BEFORE (current)
+private grid: { owner: number; hp: number; ... }[];
+
+// AFTER (new)
+private owners = new Uint8Array(2560);
+private hp = new Float32Array(2560);
+private genomeIds = new Uint16Array(2560);
+private states = new Uint8Array(2560);
+```
+
+**Migration:**
+1. Create new flat arrays alongside old grid
+2. Copy data from old to new in constructor
+3. Update all reads/writes to use flat arrays
+4. Remove old grid after testing
+
+**Test:** Verify battle runs identically to before
+
+---
+
+#### Step 0.2: Extract Systems from BattleManager
+**Files to Create:**
+- `client/src/features/battle/systems/SpreadSystem.ts`
+- `client/src/features/battle/systems/CombatSystem.ts`
+- `client/src/features/battle/systems/InfestationSystem.ts`
+
+**Changes:**
+```typescript
+// BattleManager.ts - BEFORE
+private spreadTick4Player(): void {
+  // 100 lines of spread logic
+  // 50 lines of combat logic
+  // 30 lines of infestation logic
+}
+
+// BattleManager.ts - AFTER
+private spreadSystem = new SpreadSystem();
+private combatSystem = new CombatSystem();
+private infestationSystem = new InfestationSystem();
+
+private spreadTick4Player(): void {
+  this.spreadSystem.process(this.owners, this.hp, /* ... */);
+  this.combatSystem.process(this.owners, this.hp, /* ... */);
+  this.infestationSystem.process(this.owners, this.hp, /* ... */);
+}
+```
+
+**Why:** Makes it easier to add new systems (genome, states, synergy, chaos) without bloating BattleManager.
+
+---
+
+#### Step 0.3: Migrate to ParticleContainer Rendering
+**File:** `client/src/features/battle/BattleRenderer.ts`
+
+**Changes:**
+```typescript
+// Replace Graphics-based cells with Sprites
+private cellSprites: PIXI.Sprite[] = [];
+
+initGrid(): void {
+  const baseTexture = PIXI.Texture.WHITE;
+
+  for (let i = 0; i < 2560; i++) {
+    const sprite = new PIXI.Sprite(baseTexture);
+    sprite.width = CELL_SIZE;
+    sprite.height = CELL_SIZE;
+    sprite.x = (i % GRID_WIDTH) * CELL_SIZE;
+    sprite.y = Math.floor(i / GRID_WIDTH) * CELL_SIZE;
+    this.cellLayer.addChild(sprite);
+    this.cellSprites.push(sprite);
+  }
+}
+
+updateCell(index: number, owner: number): void {
+  const sprite = this.cellSprites[index];
+  sprite.tint = this.getOwnerColor(owner);  // Much faster than redrawing Graphics
+}
+```
+
+**Performance Gain:** 4-6ms → 1-2ms render time
+
+---
+
+### PHASE 1: Hidden Genome System (Week 2-3)
+**Goal:** Add biological depth with genome inheritance/mutation
+
+#### Step 1.1: Create Genome System
+**File to Create:** `client/src/features/battle/HiddenGenomeSystem.ts`
+
+**Implementation:** Use DEEPSEEK's genome-centric design with KIMI's flyweight pattern
+
+```typescript
+export interface ViralGenome {
+  id: string;
+  virusId: number;                    // 1-4 (player ID)
+  visibleParams: VirusParams;         // The 10 public stats
+  hidden: HiddenGenome;               // Epigenetic state
+  population: Set<number>;            // Cell indices with this genome
+  birthTick: number;
+  ancestorId: string | null;          // Parent genome ID
+}
+
+export interface HiddenGenome {
+  // Epigenetic state
+  stressLevel: number;         // 0-100
+  energyReserves: number;       // 0-100
+  metabolicRate: number;        // 0.5-2.0
+  generation: number;           // Replication count
+
+  // Behavioral learning (DEEPSEEK's addition)
+  successfulAttacks: number[];  // Direction indices (0-7)
+  failedAttacks: number[];      // Direction indices (0-7)
+  preferredDirection: number | null;
+
+  // Mutation tracking
+  mutationCount: number;
+  lastMutationTick: number;
+
+  // Environmental preferences
+  temperatureOptimum: number;   // 15-45°C
+  phPreference: number;         // 0-14
+
+  // Dynamic param drift
+  paramDrift: Partial<Record<keyof VirusParams, number>>;
+}
+```
+
+**Integration:**
+```typescript
+// BattleManager.ts
+private genomeSystem = new HiddenGenomeSystem();
+
+startBattle4Player(): void {
+  // Create founder genomes for each player
+  for (let virusId = 1; virusId <= 4; virusId++) {
+    const params = this.virusParams.get(virusId)!;
+    const founderGenome = this.genomeSystem.createFounderGenome(virusId, params);
+    this.genomes.set(founderGenome.id, founderGenome);
+
+    // Place initial cells with this genome
+    const startIndex = this.getStartIndex(virusId);
+    this.genomeIds[startIndex] = this.genomeIdToIndex(founderGenome.id);
+    founderGenome.population.add(startIndex);
+  }
+}
+```
+
+---
+
+#### Step 1.2: Add Genome Mutation During Spread
+**File:** `client/src/features/battle/systems/SpreadSystem.ts`
+
+**Changes:**
+```typescript
+spreadCell(sourceIndex: number, targetX: number, targetY: number): void {
+  const sourceGenomeId = this.genomeIds[sourceIndex];
+  const sourceGenome = this.genomes.get(sourceGenomeId);
+
+  // 2% mutation chance during replication (DEEPSEEK's design)
+  if (Math.random() < 0.02) {
+    const newGenome = this.genomeSystem.mutateGenome(sourceGenome!, this.state.tick);
+    this.genomes.set(newGenome.id, newGenome);
+
+    // Create cell with new genome
+    const targetIndex = targetY * GRID_WIDTH + targetX;
+    this.owners[targetIndex] = sourceGenome!.virusId;
+    this.genomeIds[targetIndex] = this.genomeIdToIndex(newGenome.id);
+    newGenome.population.add(targetIndex);
+  } else {
+    // Inherit genome exactly
+    const targetIndex = targetY * GRID_WIDTH + targetX;
+    this.owners[targetIndex] = sourceGenome!.virusId;
+    this.genomeIds[targetIndex] = sourceGenomeId;
+    sourceGenome!.population.add(targetIndex);
+  }
+}
+```
+
+**Visual Feedback:** When mutation occurs, show brief flash above cell
+
+---
+
+#### Step 1.3: Add Combat Learning
+**File:** `client/src/features/battle/HiddenGenomeSystem.ts`
+
+**Add DEEPSEEK's combat learning:**
+```typescript
+recordCombatOutcome(
+  genome: ViralGenome,
+  attackDirection: number, // 0-7 (compass)
+  won: boolean
+): void {
+  if (won) {
+    genome.hidden.successfulAttacks.push(attackDirection);
+    if (genome.hidden.successfulAttacks.length > 10) {
+      genome.hidden.successfulAttacks.shift();
+    }
+  } else {
+    genome.hidden.failedAttacks.push(attackDirection);
+    if (genome.hidden.failedAttacks.length > 10) {
+      genome.hidden.failedAttacks.shift();
+    }
+  }
+
+  // Update preferred direction
+  this.updatePreferredDirection(genome);
+}
+
+private updatePreferredDirection(genome: ViralGenome): void {
+  if (genome.hidden.successfulAttacks.length < 3) {
+    genome.hidden.preferredDirection = null;
+    return;
+  }
+
+  // Find most common successful direction
+  const directionCounts = new Array(8).fill(0);
+  for (const dir of genome.hidden.successfulAttacks) {
+    directionCounts[dir]++;
+  }
+
+  let maxCount = 0;
+  let preferredDir = 0;
+  for (let i = 0; i < 8; i++) {
+    if (directionCounts[i] > maxCount) {
+      maxCount = directionCounts[i];
+      preferredDir = i;
+    }
+  }
+
+  if (maxCount >= 3) {
+    genome.hidden.preferredDirection = preferredDir;
+  }
+}
+```
+
+**Gameplay Impact:** Genomes learn which attack directions work best and favor them
+
+---
+
+### PHASE 2: Biological State Machine (Week 3-4)
+**Goal:** Add emergent cell behaviors through state transitions
+
+#### Step 2.1: Create State Machine
+**File to Create:** `client/src/features/battle/BiologicalStateMachine.ts`
+
+**Implementation:** Use DEEPSEEK's priority-based transition system
+
+```typescript
+export enum BiologicalState {
+  ACTIVE = 0,
+  LATENT = 1,
+  STRESSED = 2,
+  DESPERATE = 3,
+  HYPERMUTATING = 4,
+  CANNIBAL = 5,
+  SENESCENT = 6,
+  QUANTUM = 7
+}
+
+interface StateTransition {
+  from: BiologicalState[];
+  to: BiologicalState;
+  condition: (cell: CellState, genome: ViralGenome, env: LocalEnvironment) => boolean;
+  priority: number; // Higher = checked first
+}
+
+export class BiologicalStateMachine {
+  private transitions: StateTransition[] = [
+    // SENESCENT (Zombie) - Highest priority (checked when dying)
+    {
+      from: [BiologicalState.ACTIVE, BiologicalState.STRESSED, BiologicalState.DESPERATE],
+      to: BiologicalState.SENESCENT,
+      condition: (cell, genome, env) =>
+        cell.hp <= 0 &&
+        genome.visibleParams.virulence > 7 &&
+        genome.hidden.energyReserves > 10,
+      priority: 200
+    },
+
+    // DESPERATE (Last stand) - High priority
+    {
+      from: [BiologicalState.ACTIVE, BiologicalState.STRESSED, BiologicalState.LATENT],
+      to: BiologicalState.DESPERATE,
+      condition: (cell, genome, env) =>
+        cell.hp < 10 &&
+        genome.visibleParams.resilience > 6 &&
+        genome.hidden.energyReserves > 20,
+      priority: 100
+    },
+
+    // HYPERMUTATING (Stress mutation)
+    {
+      from: [BiologicalState.ACTIVE, BiologicalState.STRESSED],
+      to: BiologicalState.HYPERMUTATING,
+      condition: (cell, genome, env) =>
+        genome.hidden.stressLevel > 80 &&
+        genome.visibleParams.mutation > 6 &&
+        Math.random() < 0.2,
+      priority: 90
+    },
+
+    // CANNIBAL (Starvation)
+    {
+      from: [BiologicalState.ACTIVE, BiologicalState.STRESSED],
+      to: BiologicalState.CANNIBAL,
+      condition: (cell, genome, env) =>
+        genome.hidden.energyReserves < 15 &&
+        genome.visibleParams.aggression > 7 &&
+        this.hasAdjacentAlly(cell),
+      priority: 80
+    },
+
+    // STRESSED (Moderate stress)
+    {
+      from: [BiologicalState.ACTIVE],
+      to: BiologicalState.STRESSED,
+      condition: (cell, genome, env) =>
+        genome.hidden.stressLevel > 50 ||
+        env.toxicityLevel > 0.6,
+      priority: 50
+    },
+
+    // LATENT (Energy conservation)
+    {
+      from: [BiologicalState.ACTIVE, BiologicalState.STRESSED],
+      to: BiologicalState.LATENT,
+      condition: (cell, genome, env) =>
+        genome.hidden.energyReserves < 30 &&
+        !this.hasNearbyEnemy(cell) &&
+        genome.visibleParams.stealth > 5,
+      priority: 40
+    },
+
+    // QUANTUM (High stealth weirdness)
+    {
+      from: [BiologicalState.ACTIVE, BiologicalState.LATENT],
+      to: BiologicalState.QUANTUM,
+      condition: (cell, genome, env) =>
+        genome.visibleParams.stealth > 8 &&
+        genome.visibleParams.mutation > 8 &&
+        env.toxicityLevel > 0.3,
+      priority: 30
+    }
+  ];
+}
+```
+
+---
+
+#### Step 2.2: Integrate State Machine into Battle Loop
+**File:** `client/src/features/battle/BattleManager.ts`
+
+**Changes:**
+```typescript
+private bioStateMachine = new BiologicalStateMachine();
+
+private spreadTick4Player(): void {
+  // Phase 1: Update biological states (NEW)
+  for (let i = 0; i < 2560; i++) {
+    if (this.owners[i] === 0) continue;
+
+    const genome = this.genomes.get(this.genomeIds[i]);
+    const cellState = this.cellStates[i];
+    const env = this.getEnvironment(i);
+
+    const newState = this.bioStateMachine.updateState(cellState, genome!, env);
+    this.states[i] = newState;
+  }
+
+  // Phase 2-5: Existing spread/combat/infestation/chaos logic
+  // ...
+}
+```
+
+---
+
+#### Step 2.3: Add State Effects
+**File:** `client/src/features/battle/BiologicalStateMachine.ts`
+
+**Add DEEPSEEK's state entry/exit effects:**
+```typescript
+private enterState(cell: CellState, genome: ViralGenome, state: BiologicalState): void {
+  switch (state) {
+    case BiologicalState.DESPERATE:
+      // +50% all stats, burn energy faster
+      genome.hidden.metabolicRate = 2.0;
+      cell.attackMultiplier = 1.5;
+      cell.defenseMultiplier = 1.5;
+      cell.speedMultiplier = 1.5;
+      break;
+
+    case BiologicalState.HYPERMUTATING:
+      // 50% mutation chance per tick
+      cell.mutationRate = 0.5;
+      break;
+
+    case BiologicalState.CANNIBAL:
+      // Will consume own cells
+      cell.canCannibalize = true;
+      break;
+
+    case BiologicalState.LATENT:
+      // 90% reduced metabolism, invisible
+      genome.hidden.metabolicRate = 0.1;
+      cell.isHidden = true;
+      break;
+
+    case BiologicalState.QUANTUM:
+      // 50% chance to phase through attacks
+      cell.quantumPhase = true;
+      break;
+
+    case BiologicalState.SENESCENT:
+      // Zombie resurrection
+      cell.hp = 20;
+      cell.isZombie = true;
+      cell.attackMultiplier = 0.5;
+      cell.defenseMultiplier = 2.0;
+      break;
+  }
+}
+```
+
+---
+
+### PHASE 3: Synergy Calculator (Week 4-5)
+**Goal:** Non-linear parameter interactions
+
+#### Step 3.1: Create Synergy System
+**File to Create:** `client/src/features/battle/SynergySystem.ts`
+
+**Implementation:** Combine KIMI's caching with DEEPSEEK's synergy matrix
+
+```typescript
+export class SynergySystem {
+  private synergyCache: Map<string, SynergyResult> = new Map();
+
+  calculate(genome: ViralGenome): SynergyResult {
+    // Check cache first (KIMI's optimization)
+    const key = this.paramKey(genome.visibleParams);
+    if (this.synergyCache.has(key)) {
+      return this.synergyCache.get(key)!;
+    }
+
+    const result: SynergyResult = {
+      attackMult: 1.0,
+      defenseMult: 1.0,
+      speedMult: 1.0,
+      special: null,
+      visualAura: null
+    };
+
+    // Check pairwise synergies (DEEPSEEK's matrix)
+    const pairs = [
+      ['aggression', 'virulence', this.checkBloodlust],
+      ['aggression', 'defense', this.checkBerserkerArmor],
+      ['mutation', 'stealth', this.checkPhantomPlague],
+      ['reproduction', 'resilience', this.checkCancerousGrowth],
+      ['speed', 'mobility', this.checkPhaseShift]
+    ];
+
+    for (const [p1, p2, checker] of pairs) {
+      const synergy = checker(
+        genome.visibleParams[p1 as keyof VirusParams],
+        genome.visibleParams[p2 as keyof VirusParams]
+      );
+      if (synergy) {
+        result.attackMult *= synergy.attack || 1;
+        result.defenseMult *= synergy.defense || 1;
+        result.speedMult *= synergy.speed || 1;
+        if (synergy.special) result.special = synergy.special;
+        if (synergy.aura) result.visualAura = synergy.aura;
+      }
+    }
+
+    // Check triad synergies
+    if (
+      genome.visibleParams.aggression > 7 &&
+      genome.visibleParams.virulence > 7 &&
+      genome.visibleParams.reproduction > 7
+    ) {
+      result.special = 'APOCALYPSE';
+      result.attackMult *= 3;
+      result.speedMult *= 3;
+      result.visualAura = 'apocalypse-red';
+    }
+
+    this.synergyCache.set(key, result);
+    return result;
+  }
+
+  private checkBloodlust(a: number, v: number): SynergyEffect | null {
+    if (a >= 7 && v >= 7) {
+      return {
+        attack: 2.0,
+        special: 'BLOODLUST',
+        aura: 'blood-red-pulse'
+      };
+    }
+    return null;
+  }
+
+  private paramKey(params: VirusParams): string {
+    // Quantize params to reduce cache size (KIMI's optimization)
+    return Object.values(params).map(v => Math.floor(v / 2)).join(',');
+  }
+}
+```
+
+---
+
+#### Step 3.2: Integrate Synergies into Battle Loop
+**File:** `client/src/features/battle/BattleManager.ts`
+
+**Changes:**
+```typescript
+private synergySystem = new SynergySystem();
+
+private spreadTick4Player(): void {
+  // Calculate synergies every 10 ticks (KIMI's optimization)
+  if (this.state.tick % 10 === 0) {
+    for (const genome of this.genomes.values()) {
+      const synergy = this.synergySystem.calculate(genome);
+      genome.currentSynergy = synergy;
+
+      // Apply multipliers to all cells with this genome
+      for (const cellIndex of genome.population) {
+        this.applySynergyMultiplier(cellIndex, synergy);
+      }
+    }
+  }
+
+  // Continue with normal logic...
+}
+```
+
+---
+
+### PHASE 4: Chaos Engine (Week 5-6)
+**Goal:** Unpredictable events
+
+#### Step 4.1: Create Chaos System
+**File to Create:** `client/src/features/battle/ChaosSystem.ts`
+
+**Implementation:** Use KIMI's spatial hashing with DEEPSEEK's event definitions
+
+```typescript
+export class ChaosSystem {
+  private entropyPool = 0;
+  private activeEvents: Map<number, ChaosEventInstance> = new Map();
+
+  inject(gridState: GridState, tick: number): ChaosEvent[] {
+    const events: ChaosEvent[] = [];
+    const chaosRate = this.calculateChaosRate(gridState);
+
+    // Spatial hashing: Only check 10% of cells per tick (KIMI's optimization)
+    const checkStart = (tick % 10) * Math.floor(gridState.cells.length / 10);
+    const checkEnd = Math.min(checkStart + Math.floor(gridState.cells.length / 10), gridState.cells.length);
+
+    for (let i = checkStart; i < checkEnd; i++) {
+      if (gridState.cells[i].owner === 0) continue;
+
+      if (Math.random() < chaosRate) {
+        const event = this.rollEvent(gridState.cells[i]);
+        if (event) {
+          this.activeEvents.set(i, { event, startTick: tick, duration: event.duration });
+          events.push({ cellIndex: i, type: event.name });
+        }
+      }
+    }
+
+    // Weird events (every 100 ticks, 20% chance)
+    if (tick % 100 === 0 && Math.random() < 0.2) {
+      const weird = this.rollWeirdEvent(gridState);
+      if (weird) events.push(weird);
+    }
+
+    return events;
+  }
+
+  private rollEvent(cell: CellData): ChaosEventDefinition | null {
+    const events = [
+      { name: 'REVERSE_POLARITY', weight: 0.3, duration: 5 },
+      { name: 'MITOSIS_ERROR', weight: 0.2, duration: 1 },
+      { name: 'FRIENDLY_FIRE', weight: 0.15, duration: 10 },
+      { name: 'ENERGY_SPIKE', weight: 0.25, duration: 3 },
+      { name: 'GENOME_DRIFT', weight: 0.1, duration: 20 }
+    ];
+
+    // Weighted random selection
+    const totalWeight = events.reduce((sum, e) => sum + e.weight, 0);
+    let cumulative = 0;
+
+    for (const event of events) {
+      cumulative += event.weight / totalWeight;
+      if (Math.random() < cumulative) return event;
+    }
+    return null;
+  }
+
+  private rollWeirdEvent(state: GridState): ChaosEvent | null {
+    const roll = Math.random() * 100;
+
+    if (roll < 5) {
+      // THE BLOOM
+      state.globalReplicationBoost = 5;
+      setTimeout(() => { state.globalReplicationBoost = -5; }, 15000);
+      return { type: 'WEIRD', name: 'THE_BLOOM', global: true };
+    } else if (roll < 10) {
+      // THE SILENCE
+      state.combatEnabled = false;
+      setTimeout(() => { state.combatEnabled = true; }, 12500);
+      return { type: 'WEIRD', name: 'THE_SILENCE', global: true };
+    }
+
+    return null;
+  }
+}
+```
+
+---
+
+### PHASE 5: Visual Effects (Week 6-7)
+**Goal:** Visual feedback for all mechanics
+
+#### Step 5.1: State Visualization
+**File:** `client/src/features/battle/BattleRenderer.ts`
+
+**Add:**
+```typescript
+private updateCellVisuals(index: number, state: BiologicalState): void {
+  const sprite = this.cellSprites[index];
+
+  switch (state) {
+    case BiologicalState.DESPERATE:
+      sprite.scale.set(1.5);  // 50% larger
+      sprite.tint = 0xff0000; // Red glow
+      this.addShakeEffect(sprite);
+      break;
+
+    case BiologicalState.STRESSED:
+      sprite.tint = this.desaturateColor(sprite.tint, 0.5);
+      break;
+
+    case BiologicalState.HYPERMUTATING:
+      this.addGlitchEffect(sprite);  // RGB shift shader
+      break;
+
+    case BiologicalState.LATENT:
+      sprite.alpha = 0.3;  // Dim, nearly invisible
+      break;
+
+    case BiologicalState.SENESCENT:
+      sprite.tint = 0x888888;  // Grey zombie look
+      break;
+  }
+}
+```
+
+---
+
+#### Step 5.2: Synergy Auras
+**File:** `client/src/features/battle/BattleRenderer.ts`
+
+**Add:**
+```typescript
+private showSynergyEffect(cellIndex: number, synergy: SynergyResult): void {
+  const sprite = this.cellSprites[cellIndex];
+
+  // Create aura ring
+  const aura = new PIXI.Graphics();
+  aura.lineStyle(3, synergy.visualAuraColor, 0.6);
+  aura.drawCircle(sprite.width / 2, sprite.height / 2, sprite.width);
+  aura.endFill();
+
+  this.fxLayer.addChild(aura);
+
+  // Fade out after 2 seconds
+  setTimeout(() => {
+    this.fxLayer.removeChild(aura);
+    aura.destroy();
+  }, 2000);
+}
+```
+
+---
+
+#### Step 5.3: Chaos Event Indicators
+**File:** `client/src/features/battle/BattleRenderer.ts`
+
+**Add:**
+```typescript
+private showChaosEvent(cellIndex: number, eventName: string): void {
+  const sprite = this.cellSprites[cellIndex];
+
+  // Create icon above cell
+  const icon = new PIXI.Text(this.getEventSymbol(eventName), {
+    fontFamily: 'PIXY',
+    fontSize: 20,
+    fill: 0xffffff,
+    stroke: 0x000000,
+    strokeThickness: 4
+  });
+
+  icon.anchor.set(0.5);
+  icon.x = sprite.x + sprite.width / 2;
+  icon.y = sprite.y - 20;
+
+  this.fxLayer.addChild(icon);
+
+  // Remove after event duration
+  setTimeout(() => {
+    this.fxLayer.removeChild(icon);
+    icon.destroy();
+  }, 3000);
+}
+```
+
+---
+
+## ⏱️ TIMELINE SUMMARY
+
+| Week | Phase | Deliverable | Risk |
+|------|-------|-------------|------|
+| **1** | Phase 0 | Flat arrays, systems extracted, ParticleContainer | Low |
+| **2-3** | Phase 1 | Genome system with mutation/learning | Medium |
+| **3-4** | Phase 2 | Biological states with transitions | Medium |
+| **4-5** | Phase 3 | Synergy calculator with caching | Low |
+| **5-6** | Phase 4 | Chaos engine with weird events | Medium |
+| **6-7** | Phase 5 | Visual effects for all systems | Low |
+
+**Total:** 6-7 weeks
+
+---
+
+## 🛡️ FALLBACK PLAN (If Time/Performance Issues)
+
+### Minimum Viable Emergence (Cut Features in Order):
+
+1. **Phase 5 (VFX)** - Can ship without polish
+2. **Chaos Engine** - Keep only MITOSIS_ERROR event
+3. **Environmental System** - Cut entirely (least gameplay impact)
+4. **Genome Learning** - Remove combat direction tracking
+5. **State Machine** - Keep only ACTIVE, STRESSED, DESPERATE (3 states)
+
+### Performance Emergency Measures:
+
+If FPS < 60 after implementation:
+
+1. Reduce grid to 40×40 (1,600 cells)
+2. Update biological states every 2nd tick
+3. Disable synergy recalculation after battle start
+4. Use simpler sprites (no shaders)
+5. Reduce chaos event frequency by 50%
+
+---
+
+## ✅ SUCCESS CRITERIA
+
+### Functional:
+- [ ] 60 FPS sustained with 2,560 cells
+- [ ] <100MB memory usage
+- [ ] <500KB initial bundle size
+- [ ] 10+ unique battle outcomes from identical starting conditions
+
+### Gameplay:
+- [ ] Players say "That battle was insane! Let's go again!"
+- [ ] Same params produce different outcomes
+- [ ] Emergent strategies discovered by players (not documented)
+- [ ] Visual feedback makes mechanics understandable
+
+### Technical:
+- [ ] No TypeScript errors
+- [ ] All unit tests passing
+- [ ] Performance profiled on target hardware
+- [ ] Code documented for future maintenance
+
+---
+
+**Last Updated:** 2026-03-04  
+**Authors:** ELYSIUM v2.0 (merged from KIMI + DEEPSEEK analysis)  
+**Status:** Ready for implementation

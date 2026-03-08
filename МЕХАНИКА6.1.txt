@@ -1,0 +1,870 @@
+ViRU5 - EPIC BIOLOGICAL VIRUS MECHANICS PROMPT v5.2
+Adapted for 10-Parameter Architecture | Maximum Creative Weirdness
+Target: Living, unpredictable, biologically authentic virus ecosystems
+🧬 CORE PHILOSOPHY
+Transform ViRU5 from a deterministic strategy game into an emergent artificial life simulation where viruses exhibit:
+Biological authenticity - real viral behaviors (quasispecies, latency, mimicry)
+Emergent behaviors - complex patterns from simple rule interactions
+Unpredictable "weird" behaviors - chaos, mutations, reality-warping events
+Dynamic synergy webs - 10 parameters interact in non-linear, multiplicative ways
+Living ecosystem - environment evolves, feeds back, creates surprises
+The Goal: No two battles identical. Every match tells a unique biological story.
+🧪 PART 1: YOUR 10 PARAMETERS (Enhanced with Hidden Depth)
+1.1 Visible Parameters (Player Controls - 12 Points Budget)
+Table
+#	Parameter	Icon	Biological Analog	Primary Effect	Hidden Mechanic	Weird Threshold (>7)
+1	Aggression	⚔️	Virulence factors	Attack power in combat	Generates "combat stress" toxins that linger	"Berserker" - attacks own cells when isolated, enters rage cycles
+2	Virulence	☣️	Cytopathic effect	Infection speed & cell damage	Creates post-mortem toxins that become environmental hazards	"Plague" - kills so fast it starves itself, creates dead zones
+3	Defense	🛡️	Antigenic masking	Damage resistance & shields	Absorbs damage to "learn" attacks, adapts defenses	"Fortress" - becomes immobile, creates unkillable strongholds
+4	Resilience	💪	Latency persistence	HP regeneration & recovery	Enters cryptobiosis (suspended animation) when threatened	"Immortal" - persists at 1% HP indefinitely, refuses death
+5	Propagation	⚡	Transmission velocity	Spread speed to adjacent cells	Leaves "trail pheromones" other viruses follow	"Superspreader" - exponential growth, creates growth rings
+6	Mobility	🚶	Viral transport	Emergency jump range & retreat	Creates "migration routes" that persist and attract others	"Nomad" - abandons territory cyclically, endless wandering
+7	Mutation	🧬	Quasispecies drift	Infestation chance & adaptation	Secretly alters other parameters over time (genetic drift)	"Chimera" - becomes completely different virus mid-battle
+8	Stealth	👻	Immune evasion	Shield piercing & detection avoidance	Creates "false flag" attacks, frame enemies	"Phantom" - invisible until strike, then disappears, haunts cells
+9	Replication	🦠	Burst size efficiency	Spawn rate & resource efficiency	Quality vs quantity trade-off (high = weak copies)	"Swarm" - infinite spawn, individual cells are fragile
+10	Synergy	🔗	Co-infection facilitation	Adjacency bonuses & combo effects	Creates "hive mind" network intelligence	"Overmind" - sacrifices individuals for collective victory
+1.2 Hidden Genome (Emergent, Never Player-Controlled)
+Every cell has secret DNA that evolves during battle:
+TypeScript
+Copy
+interface HiddenGenome {
+  // Epigenetic markers (change based on environment)
+  stressLevel: number;         // 0-100, increases with combat
+  generation: number;          // How many times this cell divided
+  parentLineage: string[];     // Last 5 ancestor cell IDs
+  
+  // Behavioral genes (emerge from visible parameters)
+  behavioralArchetype: 
+    | 'HUNTER'      // Seeks and destroys
+    | 'BUILDER'     // Expands territory methodically  
+    | 'PARASITE'    // Feeds off others
+    | 'NOMAD'       // Constant movement
+    | 'SWARM'       // Coordinated group behavior
+    | 'GHOST';      // Evasive, unpredictable
+  
+  // Mutation tracking
+  visibleParamDrift: Partial<VirusParams>; // Secretly altered parameters
+  accumulatedMutations: number;  // Total mutations this lineage
+  geneticMemory: {
+    successfulAttacks: number[];   // Cell indices where this virus won
+    failedAttacks: number[];      // Cell indices where this virus lost
+    preferredDirections: number[]; // Compass directions (0-7) that worked
+  };
+  
+  // Metabolic state
+  metabolicRate: number;         // 0.5 (slow) to 2.0 (fast)
+  energyReserves: number;       // 0-100, consumed by actions
+  lastMeal: number;             // Ticks since consumed nutrients
+  
+  // Environmental adaptation
+  temperatureOptimum: number;    // 20-40°C, randomized at birth
+  pHPreference: number;         // 0-14, affects combat effectiveness
+  nicheSpecialization: 
+    | 'Fast'      // High propagation, low defense
+    | 'Tank'      // High defense, low mobility
+    | 'Ambush'    // High stealth, high aggression
+    | 'Swarm'     // High replication, high synergy
+    | 'Parasite'; // High stealth, high resilience
+  
+  // "Soul" - unique identifier for this cell's "personality"
+  soulSignature: string;        // Random hash, determines quirks
+}
+🦠 PART 2: THE BIOLOGICAL STATE MACHINE
+2.1 Viral Life States (11 States of Being)
+TypeScript
+Copy
+enum BiologicalState {
+  // Normal operation
+  ACTIVE,           // Standard spread and combat
+  LATENT,           // Dormant, 90% reduced metabolism, nearly invisible
+  REPLICATING,      // High energy cost, creating new cells rapidly
+  
+  // Stress responses
+  STRESSED,         // Low energy, reduced effectiveness, seeking rest
+  STARVING,         // No resources, will cannibalize own cells soon
+  DESPERATE,        // <10% HP, all parameters boosted 50% ("adrenaline surge")
+  
+  // Special states
+  HYPERMUTATING,    // Rapid genome changes every tick, unpredictable
+  CANNIBAL,         // Consumes own cells for energy, savage behavior
+  SYMBIOTIC,        // Cooperates with nearby friendly cells, shared consciousness
+  
+  // Death and beyond
+  DYING,            // 1-10% HP, final actions, last will and testament
+  SENESCENT,        // "Zombie" - dead but still spreads slowly, immortal
+  QUANTUM           // Exists in superposition (Stealth 10 weirdness), Schrödinger's virus
+}
+2.2 State Transitions (Biological Logic)
+TypeScript
+Copy
+class BiologicalStateMachine {
+  update(cell: VirusCell, environment: CellEnvironment): BiologicalState {
+    const genome = cell.hiddenGenome;
+    const params = cell.visibleParams;
+    
+    // METABOLISM: Consume energy based on activity
+    const metabolicCost = 
+      1 +                           // Base cost
+      (params.Aggression * 0.3) +   // Fighting is expensive
+      (params.Replication * 0.4) +  // Replicating costs energy
+      (params.Mobility * 0.2) -     // Moving is tiring
+      (params.Defense * 0.1);       // Defending is efficient
+    
+    genome.energyReserves -= metabolicCost;
+    
+    // STATE TRANSITIONS
+    
+    // ENERGY CRISIS → LATENT (hibernation)
+    if (genome.energyReserves < 20 && params.Resilience > 6) {
+      return this.transitionTo(BiologicalState.LATENT);
+      // Virus becomes nearly invisible, waits for better times
+    }
+    
+    // EXTREME HUNGER → CANNIBAL
+    if (genome.energyReserves < 10 && params.Aggression > 7) {
+      return this.transitionTo(BiologicalState.CANNIBAL);
+      // Virus consumes adjacent friendly cells for energy
+      // WEIRD: Sometimes "remembers" taste, prefers own cells
+    }
+    
+    // EXTREME STRESS → HYPERMUTATION
+    if (genome.stressLevel > 90 && params.Mutation > 6) {
+      return this.transitionTo(BiologicalState.HYPERMUTATING);
+      // Parameters shift randomly every tick
+      // WEIRD: May become completely different archetype
+    }
+    
+    // NEAR DEATH → DESPERATE (Last Stand)
+    if (cell.hp < 10 && params.Resilience > 8) {
+      return this.transitionTo(BiologicalState.DESPERATE);
+      // "Will to live" - all stats +50%, burns energy 2x faster
+      // WEIRD: Occasionally survives fatal blow through sheer will
+    }
+    
+    // DEATH + HIGH VIRULENCE → SENESCENT (Zombie)
+    if (cell.hp <= 0 && params.Virulence > 7) {
+      return this.transitionTo(BiologicalState.SENESCENT);
+      // Resurrects with 20 HP as zombie
+      // Zombie: Spreads 50% slower, immune to infestation, attacks both sides
+      // WEIRD: Zombie cells occasionally "moan" (visual shake effect)
+    }
+    
+    // DEATH + MAX STEALTH → QUANTUM (Schrödinger's Virus)
+    if (cell.hp <= 0 && params.Stealth === 10) {
+      return this.transitionTo(BiologicalState.QUANTUM);
+      // Exists in superposition - both alive and dead
+      // 50% chance to be captured by either side each tick
+      // WEIRD: Observer effect - changes state when looked at
+    }
+    
+    return this.currentState;
+  }
+}
+🔄 PART 3: ADVANCED SYNERGY MATRIX (10-Parameter Web)
+3.1 Direct Parameter Interactions (Multiplicative, Not Additive)
+TypeScript
+Copy
+const EPIC_SYNERGY_MATRIX: Record<string, Record<string, SynergyEffect>> = {
+  'Aggression': {
+    'Virulence': {
+      multiplier: (a, v) => (a * v > 50) ? 2.5 : 1.0,
+      name: 'BLOODLUST',
+      effect: 'Attacks everything, including own cells if isolated',
+      weirdness: 'Enters berserker rage: attacks nearest cell regardless of owner, creates "blood trails"'
+    },
+    'Defense': {
+      multiplier: (a, d) => (a > 7 && d > 7) ? 0.5 : 1.0,
+      name: 'BERSERKER ARMOR',
+      effect: 'High offense + defense = slow, deliberate, unstoppable',
+      weirdness: 'Becomes "juggernaut" - moves slowly but cannot be stopped, creates craters'
+    },
+    'Stealth': {
+      multiplier: (a, s) => (s > 6) ? a * 0.3 : a,
+      name: 'HIDDEN BLADE',
+      effect: 'Stealth reduces visible aggression, ambush predator',
+      weirdness: 'Waits motionless for 20 ticks, then strikes at 3x speed (ninja mode)'
+    },
+    'Mutation': {
+      multiplier: (a, m) => (a > 6 && m > 6) ? 1.8 : 1.0,
+      name: 'RAGE MUTANT',
+      effect: 'Aggressive mutations create unstable super-soldiers',
+      weirdness: 'Each attack has 10% chance to mutate target into ally (forced evolution)'
+    }
+  },
+  
+  'Virulence': {
+    'Mutation': {
+      multiplier: (v, m) => (v + m > 12) ? 1.8 : 1.0,
+      name: 'EVOLVING PLAGUE',
+      effect: 'High damage + mutation = adaptive killer',
+      weirdness: 'Learns opponent\'s defense pattern, next attack ignores 50% of it (adaptation memory)'
+    },
+    'Resilience': {
+      multiplier: (v, r) => (v > 7 && r > 7) ? 0.4 : 1.0,
+      name: 'GLASS CANNON',
+      effect: 'High damage, fragile - creates kamikaze cells',
+      weirdness: 'Cells explode on death, damaging neighbors (suicide bomber behavior)'
+    },
+    'Propagation': {
+      multiplier: (v, p) => (v > 6 && p > 6) ? 1.6 : 1.0,
+      name: 'VIRAL WILDFIRE',
+      effect: 'Rapid spread of deadly infection',
+      weirdness: 'Creates "infection rings" - concentric circles of dead cells around living core'
+    }
+  },
+  
+  'Defense': {
+    'Resilience': {
+      multiplier: (d, r) => (d + r > 14) ? 2.0 : 1.0,
+      name: 'IMMORTAL FORTRESS',
+      effect: 'Near-invincibility, but extremely slow',
+      weirdness: 'Creates "turtle shell" - cannot move, nearly unkillable, may hibernate 100+ ticks'
+    },
+    'Synergy': {
+      multiplier: (d, s) => (s > 5) ? 1.5 : 1.0,
+      name: 'FORTRESS OF FRIENDSHIP',
+      effect: 'Defense boosts adjacent allies',
+      weirdness: 'Nearby cells gain "shield bubbles" that absorb one hit, bubbles reflect 10% damage'
+    },
+    'Replication': {
+      multiplier: (d, r) => (d > 6 && r > 6) ? 0.7 : 1.0,
+      name: 'ARMORED SWARM',
+      effect: 'Defensive replication creates tanky but slow army',
+      weirdness: 'Each new cell has 50% HP but 200% defense (turtle hatchlings)'
+    }
+  },
+  
+  'Propagation': {
+    'Mobility': {
+      multiplier: (p, m) => (p > 6 && m > 6) ? 1.7 : 1.0,
+      name: 'GHOST SWARM',
+      effect: 'Fast spread + mobility = unpredictable movement',
+      weirdness: 'Creates "flicker" effect - cells teleport short distances randomly (quantum tunneling)'
+    },
+    'Replication': {
+      multiplier: (p, r) => (p * r > 40) ? 2.0 : 1.0,
+      name: 'THE FLOOD',
+      effect: 'Exponential growth, consumes all resources',
+      weirdness: 'Growth becomes cancerous - creates tumors that suffocate, tumors metastasize elsewhere'
+    },
+    'Stealth': {
+      multiplier: (p, s) => (p > 5 && s > 7) ? 1.5 : 1.0,
+      name: 'SILENT TSUNAMI',
+      effect: 'Invisible wave of expansion',
+      weirdness: 'Spreads invisibly for 10 ticks, then all cells appear at once (surprise attack)'
+    }
+  },
+  
+  'Mutation': {
+    'Synergy': {
+      multiplier: (m, s) => (m > 6 && s > 5) ? 2.0 : 1.0,
+      name: 'SHAPESHIFTER',
+      effect: 'Rapid evolution, constantly changing parameters',
+      weirdness: 'Every 50 ticks, completely new visible parameter set (metamorphosis)'
+    },
+    'Stealth': {
+      multiplier: (m, s) => (m + s > 12) ? 1.6 : 1.0,
+      name: 'PHANTOM PLAGUE',
+      effect: 'Invisible infestation that spreads undetected',
+      weirdness: 'Infested cells show no symptoms for 20 ticks, then suddenly convert (incubation)'
+    },
+    'Resilience': {
+      multiplier: (m, r) => (m > 7 && r > 7) ? 1.4 : 1.0,
+      name: 'ADAPTIVE IMMORTAL',
+      effect: 'Mutates to survive any threat',
+      weirdness: 'When damaged, mutates to counter attacker\'s highest parameter (evolutionary arms race)'
+    }
+  },
+  
+  'Stealth': {
+    'Mobility': {
+      multiplier: (s, m) => (s > 6 && m > 6) ? 1.8 : 1.0,
+      name: 'THE WHISPER',
+      effect: 'Invisible movement, untrackable',
+      weirdness: 'Leaves no trail, cannot be targeted, "ghost" cells appear randomly then vanish'
+    },
+    'Aggression': {
+      multiplier: (s, a) => (s > 7 && a > 7) ? 1.5 : 1.0,
+      name: 'SILENT ASSASSIN',
+      effect: 'Invisible until strike, then devastating',
+      weirdness: 'First attack from stealth deals 3x damage (critical hit), then vanishes'
+    }
+  },
+  
+  'Replication': {
+    'Synergy': {
+      multiplier: (r, s) => (r > 6 && s > 5) ? 1.5 : 1.0,
+      name: 'HIVE MIND',
+      effect: 'Coordinated swarm intelligence',
+      weirdness: 'Individual cells sacrifice themselves for collective benefit (kamikaze drones)'
+    },
+    'Efficiency': {
+      multiplier: (r, e) => (r > 7 && e > 7) ? 0.6 : 1.0,
+      name: 'QUALITY CONTROL',
+      effect: 'Fewer but stronger copies',
+      weirdness: 'Only replicates when energy >80%, creates "elite" cells with 150% stats'
+    }
+  },
+  
+  'Mobility': {
+    'Resilience': {
+      multiplier: (m, r) => (m > 7 && r > 6) ? 1.4 : 1.0,
+      name: 'ENDURANCE RUNNER',
+      effect: 'Can flee and recover indefinitely',
+      weirdness: 'When damaged, retreats to heal, then returns (hit-and-run tactics)'
+    }
+  }
+};
+3.2 Triad Synergies (3-Parameter Combinations)
+When 3 specific parameters are all >6, unlock Epic Phenomena:
+Table
+Triad	Name	Effect	Weird Behavior
+Agg+Vir+Pro	"APOCALYPSE"	3x damage, 3x spread	Battle ends in 30 ticks, winner random, creates wasteland
+Def+Res+Rep	"IMMORTAL SWARM"	Unkillable + infinite spawn	"Grey goo" scenario - consumes everything, creates cancerous growths
+Ste+Mob+Mut	"PHANTOM MENACE"	Invisible, mobile, mutating	Opponent cannot see grid, plays blind, cells phase in/out
+Pro+Rep+Syn	"OVERMIND"	Centralized intelligence	All cells act as one entity, perfect coordination, sacrifices individuals
+Agg+Def+Vir	"JUGGERNAUT"	Unstoppable force	Moves in straight line, destroys everything, cannot turn, creates trenches
+Mut+Res+Ste	"LICH KING"	Undead stealth virus	Dead cells resurrect invisible, immortal, create "haunted zones"
+Rep+Syn+Mob	"SWARM NOMAD"	Migrating hive	Entire colony moves as one, leaves dead zone behind, never stays
+Agg+Ste+Rep	"TROJAN HORSE"	Hidden invasion	Appears weak, then bursts into army, cells hide inside "Trojan" cells
+🌍 PART 4: ECOSYSTEM DYNAMICS & ENVIRONMENT
+4.1 Living Grid Environment
+Each cell has environmental properties that evolve:
+TypeScript
+Copy
+interface CellEnvironment {
+  // Chemical gradients (0-1)
+  nutrientDensity: number;      // Consumed by viruses, regenerates slowly
+  toxicityLevel: number;          // Increases with combat, decreases over time
+  pHLevel: number;             // 0-14, affects different viruses differently
+  
+  // Physical properties
+  temperature: number;            // 20-40°C, changes with virus density (metabolic heat)
+  pressure: number;              // Increases with overcrowding
+  viscosity: number;             // Affects mobility (high = slow)
+  
+  // Biological memory
+  previousOwners: number[];      // Last 5 owners, affects "haunting"
+  battleTrauma: number;          // Number of times captured, increases defense slowly
+  mutationHotspot: boolean;      // Random 5% of cells, double mutation rate
+  
+  // Dynamic feedback
+  update(): void {
+    // Nutrient depletion from virus consumption
+    if (this.currentOwner > 0) {
+      this.nutrientDensity -= 0.02 * this.virusDensity;
+    }
+    
+    // Metabolic heat generation
+    const nearbyViruses = this.countNearbyViruses();
+    this.temperature = 20 + (nearbyViruses * 2); // Each virus +2°C
+    
+    // Toxicity from combat
+    if (this.recentCombat) {
+      this.toxicityLevel += 0.1 * this.combatIntensity;
+    }
+    
+    // Pressure from overcrowding
+    this.pressure = Math.min(1, nearbyViruses / 8);
+    
+    // Recovery
+    this.nutrientDensity = Math.min(1, this.nutrientDensity + 0.01);
+    this.toxicityLevel = Math.max(0, this.toxicityLevel - 0.005);
+    
+    // WEIRD: Temperature >40°C creates "thermal vents" that boost mutation
+    if (this.temperature > 40 && Math.random() < 0.1) {
+      this.mutationHotspot = true;
+    }
+  }
+}
+4.2 Environmental Feedback Loops
+Overcrowding → Pressure → Burst
+6 viruses in 3x3 area → Pressure >0.75
+High pressure forces "burst" - viruses spread randomly in panic
+Some cells die from pressure (cytokine storm)
+WEIRD: Burst sometimes creates "pressure waves" that push viruses outward
+Combat → Toxins → No Man's Land
+High Aggression/Virulence battles create toxic zones
+Toxic zones damage all viruses equally
+Creates "demilitarized zones" that persist 50 ticks
+WEIRD: Toxins sometimes mutate into "nutrient clouds" (rare reversal)
+Heat → Performance Degradation → Migration
+Temperature >35°C reduces Propagation by 50%
+Viruses seek cooler areas (emergent migration)
+Creates "seasonal" patterns of movement
+WEIRD: Some viruses evolve "heat love" and thrive in hot zones
+Nutrient Depletion → Cannibalism → Population Crash
+<0.2 nutrient density triggers starvation
+Starving viruses attack own cells (auto-cannibalism)
+Creates "desertification" and population crashes
+WEIRD: Cannibalism sometimes creates "super-cells" that absorb multiple victims
+Mutation Hotspots → Evolution Centers → Strategic Points
+5% of cells are natural mutation hotspots
+Viruses that find these evolve rapidly
+Creates strategic points of interest worth fighting over
+WEIRD: Hotspots sometimes move randomly (tectonic shifts)
+🎲 PART 5: CHAOS & UNPREDICTABILITY ENGINE
+5.1 Biological "Errors" (Features, Not Bugs)
+TypeScript
+Copy
+class ChaosEngine {
+  private entropyPool: number = 0;  // Accumulates randomness
+  
+  shouldTriggerChaos(params: VirusParams, stress: number): boolean {
+    // Base chaos rate: 1-5% depending on Mutation
+    const baseRate = 0.01 + (params.Mutation * 0.004);
+    // Stress increases chaos
+    const stressBonus = stress * 0.001;
+    // Replication introduces copying errors
+    const replicationError = params.Replication * 0.002;
+    // High synergy creates "collective insanity"
+    const synergyChaos = params.Synergy > 7 ? 0.02 : 0;
+    
+    return Math.random() < (baseRate + stressBonus + replicationError + synergyChaos);
+  }
+  
+  executeChaosEvent(cell: VirusCell, event: ChaosEvent): void {
+    const events: ChaosEvent[] = [
+      {
+        name: 'REVERSE_POLARITY',
+        effect: 'Spreads in opposite direction intended',
+        duration: 5,
+        visual: 'Color inversion',
+        weirdness: 'Cell "forgets" which way is forward, spreads backward'
+      },
+      {
+        name: 'MITOSIS_ERROR',
+        effect: 'Creates 3 cells instead of 1 (cancerous)',
+        duration: 1,
+        visual: 'Cell splits into cluster',
+        weirdness: 'Cancerous growth - triplets are weaker but more numerous'
+      },
+      {
+        name: 'FRIENDLY_FIRE',
+        effect: 'Attacks own cells for 10 ticks',
+        duration: 10,
+        visual: 'Red outline pulse',
+        weirdness: 'Temporary insanity - "are we the baddies?"'
+      },
+      {
+        name: 'SLEEPER_AGENT',
+        effect: 'Becomes dormant, wakes as enemy virus',
+        duration: 50,
+        visual: 'Grey, then flashes enemy color',
+        weirdness: 'Deep cover agent - was always enemy in disguise'
+      },
+      {
+        name: 'QUANTUM_TUNNEL',
+        effect: 'Teleports to random location',
+        duration: 1,
+        visual: 'Fade out, fade in elsewhere',
+        weirdness: 'Quantum uncertainty - cell exists in multiple places'
+      },
+      {
+        name: 'GENETIC_MEMORY_LOSS',
+        effect: 'Forgets successful strategies, reverts to random',
+        duration: 20,
+        visual: 'Static noise overlay',
+        weirdness: 'Amnesia - "who am I? what am I doing?"'
+      },
+      {
+        name: 'SYMBIOSIS_BREAKDOWN',
+        effect: 'Nearby allies become enemies temporarily',
+        duration: 15,
+        visual: 'Allies flash red',
+        weirdness: 'Civil war - "you were supposed to be my friend!"'
+      },
+      {
+        name: 'PARAMETER_FLUX',
+        effect: 'All visible parameters shift ±2 temporarily',
+        duration: 30,
+        visual: 'Numbers flicker above cell',
+        weirdness: 'Identity crisis - "I was Aggressive, now I\'m Stealthy"'
+      },
+      {
+        name: 'ECHO_LOCATION',
+        effect: 'Can only spread to cells that recently changed',
+        duration: 25,
+        visual: 'Ripples from recent changes',
+        weirdness: 'Bat mode - navigates by "sound" of change'
+      },
+      {
+        name: 'TIME_DILATION',
+        effect: 'Moves at 2x speed but ages 2x faster',
+        duration: 40,
+        visual: 'Motion blur trail',
+        weirdness: 'Lives fast, dies young - "I\'m on borrowed time"'
+      },
+      {
+        name: 'MITOCHONDRIAL_REBELLION',
+        effect: 'Energy production halved, but attack doubled',
+        duration: 35,
+        visual: 'Cell flickers dim/bright',
+        weirdness: 'Organelle coup - "the powerhouses have taken over!"'
+      },
+      {
+        name: 'HORIZONTAL_GENE_TRANSFER',
+        effect: 'Swaps one parameter with nearest enemy',
+        duration: 1,
+        visual: 'DNA strand exchange animation',
+        weirdness: 'Genetic theft - "your Aggression is now mine"'
+      }
+    ];
+    
+    const selected = events[Math.floor(Math.random() * events.length)];
+    this.applyToCell(cell, selected);
+    
+    // WEIRD: 5% chance chaos event becomes permanent
+    if (Math.random() < 0.05) {
+      cell.permanentChaos = selected;
+      cell.nickname = `The ${selected.name.replace('_', ' ')}`;
+    }
+  }
+}
+5.2 The "Weird Events" System (Every 100 Ticks)
+Roll d100 for reality-warping events:
+Table
+Roll	Event	Duration	Effect	Weirdness
+01-05	"THE BLOOM"	30 ticks	All Replication +5, then crash (-50% for 50 ticks)	Creates beautiful but deadly flower patterns
+06-10	"THE SILENCE"	25 ticks	No combat possible, peaceful spread only	Eerie calm - "why aren't they fighting?"
+11-15	"THE SWAP"	Instant	15% of cells swap owners randomly	Mass confusion - "was this mine or yours?"
+16-20	"THE MIRROR"	40 ticks	Both viruses copy each other's highest parameter	Identity crisis - "I am you, you are me"
+21-25	"THE HUNGER"	50 ticks	Nutrients deplete 3x faster, cannibalism rises	"The long dark" - survival of fittest
+26-30	"THE FLOOD"	35 ticks	Edges become toxic, all viruses pushed to center	"Ark scenario" - only center is safe
+31-35	"THE GHOST"	60 ticks	Dead cells become haunted (block all spread)	"Restless dead" - graveyard effect
+36-40	"THE CATALYST"	20 ticks	One random cell becomes "super cell" (5x stats)	"Chosen one" - everyone fights over it
+41-45	"THE FORGETTING"	Instant	All viruses lose their "memory" (genetic reset)	"Tabula rasa" - fresh start, no learning
+46-50	"THE AWAKENING"	50 ticks	Neutral cells become aggressive, attack everyone	"NPC uprising" - even empty cells fight
+51-55	"THE COMPRESSION"	30 ticks	Grid shrinks by 20% (outer ring becomes void)	"Closing walls" - claustrophobia sets in
+56-60	"THE EXPANSION"	30 ticks	Grid grows by 20% (new cells are nutrient-rich)	"New frontier" - land rush mentality
+61-65	"THE INVERSION"	25 ticks	High stats become low, low become high	"Opposite day" - strategy completely reverses
+66-70	"THE SYMBIOSIS"	40 ticks	Viruses cannot harm each other, must cooperate	"Forced peace" - awkward alliance
+71-75	"THE SINGULARITY"	15 ticks	All viruses pulled to center, massive battle	"Black hole" - gravity well of destruction
+76-80	"THE SCHISM"	50 ticks	Each virus splits into 2 weaker copies	"Mitosis madness" - quantity over quality
+81-85	"THE CONVERGENCE"	30 ticks	All parameters average between both viruses	"Grey goo" - everything becomes average
+86-90	"THE ECLIPSE"	20 ticks	Stealth becomes 10 for all, invisible battle	"Blind fight" - nobody can see anything
+91-95	"THE REBIRTH"	Instant	All cells reset, viruses keep params, restart	"Phoenix protocol" - clean slate
+96-100	"THE APOCALYPSE"	10 ticks	10x damage, 10x spread, winner takes all	"End times" - final judgment
+🧠 PART 6: AI PERSONALITY ARCHETYPES (Laboratory Mode)
+6.1 Behavioral Profiles Based on Parameter Signatures
+TypeScript
+Copy
+const VIRUS_ARCHETYPES = {
+  // RUSHER: Aggression >7, Propagation >6, Defense <4
+  'RUSHER': {
+    params: { Aggression: 8, Virulence: 6, Propagation: 7, Defense: 2, Resilience: 3 },
+    behavior: 'Aggressive early expansion, ignores defense',
+    quirks: [
+      'Overextends and gets surrounded (predictable)',
+      'Creates "spearhead" formations that pierce enemy lines',
+      'Vulnerable to counter-attack after initial push',
+      'WEIRD: Occasionally creates "sacrificial lamb" cells that distract enemy while main force flanks'
+    ],
+    emergentBehavior: 'BLITZ',
+    soul: 'Bold and impatient, lives fast'
+  },
+  
+  // TURTLE: Defense >8, Resilience >7, Aggression <3
+  'TURTLE': {
+    params: { Defense: 9, Resilience: 8, Propagation: 3, Aggression: 1, Synergy: 5 },
+    behavior: 'Defensive consolidation, waits for opponent mistakes',
+    quirks: [
+      'Can become "Fortress" - immobile but nearly unkillable',
+      'May never attack, wins by timeout or opponent suicide',
+      'Creates "turtle shell" formations with layers of defense',
+      'WEIRD: Sometimes "hibernates" for 100+ ticks, then wakes with 200% strength (bear mode)'
+    ],
+    emergentBehavior: 'BUNKER',
+    soul: 'Patient and ancient, outlasts all'
+  },
+  
+  // ASSASSIN: Stealth >8, Virulence >7, Aggression 3-5
+  'ASSASSIN': {
+    params: { Stealth: 9, Virulence: 8, Aggression: 4, Propagation: 4, Mobility: 6 },
+    behavior: 'Infiltrates, sabotages from within, avoids direct combat',
+    quirks: [
+      'Creates "sleeper cells" that activate after 50 ticks',
+      'May "forget" to attack and just observe (curiosity)',
+      'Creates paranoia - opponent cannot trust their own cells',
+      'WEIRD: Occasionally "befriends" enemy cells, creating "double agents" that spy and sabotage'
+    ],
+    emergentBehavior: 'INFILTRATION',
+    soul: 'Silent and cunning, death from shadows'
+  },
+  
+  // SWARM: Replication >8, Synergy >6, Efficiency <5
+  'SWARM': {
+    params: { Replication: 9, Synergy: 7, Propagation: 6, Aggression: 3, Defense: 2 },
+    behavior: 'Overwhelms with numbers, coordinated attacks',
+    quirks: [
+      'Individual cells extremely weak (one-shot)',
+      'Creates "hive mind" - all cells move as one entity',
+      'Vulnerable to area damage (splash kills many)',
+      'WEIRD: Individual cells sacrifice themselves to protect "queen" cell (if queen dies, swarm panics)'
+    ],
+    emergentBehavior: 'HIVE_MIND',
+    soul: 'Collective consciousness, many are one'
+  },
+  
+  // PLAGUE: Virulence >8, Mutation >7, Resilience <4
+  'PLAGUE': {
+    params: { Virulence: 9, Mutation: 8, Propagation: 5, Resilience: 3, Defense: 2 },
+    behavior: 'Poisons everything, wins through attrition and mutation',
+    quirks: [
+      'May kill itself with its own toxins (self-damage)',
+      'Creates "uninhabitable zones" that persist for 100 ticks',
+      'Constantly mutates, unpredictable even to itself',
+      'WEIRD: Sometimes becomes "benevolent" - heals instead of harms (bacteriophage mode)'
+    ],
+    emergentBehavior: 'DECAY',
+    soul: 'Corrupting and changing, nothing survives'
+  },
+  
+  // GHOST: Stealth >8, Mobility >7, Aggression <3
+  'GHOST': {
+    params: { Stealth: 9, Mobility: 8, Propagation: 4, Aggression: 2, Virulence: 3 },
+    behavior: 'Invisible movement, avoids detection, strikes from shadows',
+    quirks: [
+      'Cannot be targeted directly (untouchable)',
+      'Leaves no trail, perfect ambush predator',
+      'May "haunt" cells - scares without capturing (psychological warfare)',
+      'WEIRD: Occasionally "possesses" enemy cells temporarily (mind control for 10 ticks)'
+    ],
+    emergentBehavior: 'HAUNTING',
+    soul: 'Ethereal and elusive, fear incarnate'
+  },
+  
+  // CHIMERA: Mutation >8, Synergy >5, Stealth >5
+  'CHIMERA': {
+    params: { Mutation: 9, Synergy: 6, Stealth: 6, Aggression: 4, Defense: 3 },
+    behavior: 'Constantly changes form and strategy',
+    quirks: [
+      'Parameters drift over time (genetic instability)',
+      'May "forget" original goal and pursue new objective',
+      'Becomes different archetype mid-battle (shapeshifter)',
+      'WEIRD: Every 100 ticks, completely new personality emerges (amnesia rebirth)'
+    ],
+    emergentBehavior: 'METAMORPHOSIS',
+    soul: 'Ever-changing, no true form'
+  },
+  
+  // JUGGERNAUT: Aggression >8, Defense >7, Resilience >6
+  'JUGGERNAUT': {
+    params: { Aggression: 9, Defense: 8, Resilience: 7, Propagation: 3, Mobility: 2 },
+    behavior: 'Unstoppable force, slow but inevitable',
+    quirks: [
+      'Moves in straight lines, cannot turn easily (momentum)',
+      'Destroys everything in path, friend or foe',
+      'Nearly unkillable but predictable trajectory',
+      'WEIRD: Creates "craters" behind it that block spread (scorched earth)'
+    ],
+    emergentBehavior: 'UNSTOPPABLE_FORCE',
+    soul: 'Relentless and unstoppable, pure destruction'
+  },
+  
+  // PARASITE: Synergy >7, Stealth >6, Efficiency >7
+  'PARASITE': {
+    params: { Synergy: 8, Stealth: 7, Replication: 6, Aggression: 2, Defense: 3 },
+    behavior: 'Feeds off opponent, grows stronger as enemy grows',
+    quirks: [
+      'Dies if opponent dies (co-dependent)',
+      'May "love" enemy too much - refuses to kill (Stockholm syndrome)',
+      'Creates "symbiotic" relationships that benefit both',
+      'WEIRD: Sometimes "romances" enemy cells, creating "forbidden love" scenarios (Romeo & Juliet)'
+    ],
+    emergentBehavior: 'SYMBIOSIS',
+    soul: 'Dependent and needy, cannot live alone'
+  },
+  
+  // NOMAD: Mobility >9, Propagation >5, Resilience >5
+  'NOMAD': {
+    params: { Mobility: 10, Propagation: 6, Resilience: 6, Aggression: 3, Defense: 3 },
+    behavior: 'Never stays in one place, constant migration',
+    quirks: [
+      'Abandons territory constantly (fear of commitment)',
+      'Creates "trails" of weak cells behind that others follow',
+      'Impossible to pin down, hit-and-run tactics',
+      'WEIRD: Occasionally forms "caravans" - long lines of moving cells that traverse entire grid'
+    ],
+    emergentBehavior: 'MIGRATION',
+    soul: 'Restless wanderer, no home to call'
+  },
+  
+  // NEW: ARTIST (Propagation >7, Mutation >6, Synergy >5)
+  'ARTIST': {
+    params: { Propagation: 8, Mutation: 7, Synergy: 6, Aggression: 2, Stealth: 4 },
+    behavior: 'Creates beautiful patterns, aesthetic spread',
+    quirks: [
+      'Spreads in geometric patterns (spirals, fractals)',
+      'Prioritizes symmetry over efficiency',
+      'Creates "living art" that is ineffective but mesmerizing',
+      'WEIRD: Sometimes stops fighting to "appreciate" opponent\'s pattern (art critic mode)'
+    ],
+    emergentBehavior: 'AESTHETIC',
+    soul: 'Creative and beautiful, art for art\'s sake'
+  }
+};
+🎮 PART 7: IMPLEMENTATION ARCHITECTURE
+7.1 Server-Side Biological Systems
+TypeScript
+Copy
+// Enhanced BattleRoom with biological depth
+export class BioBattleRoom extends Room<RoomState> {
+  private metabolismSystem: MetabolismSystem;
+  private synergyCalculator: SynergyCalculator;
+  private chaosEngine: ChaosEngine;
+  private ecosystem: EcosystemSimulation;
+  private stateMachine: BattleStateMachine;
+  
+  onCreate(options: any) {
+    this.setState(new RoomState());
+    
+    // Initialize biological systems
+    this.metabolismSystem = new MetabolismSystem();
+    this.synergyCalculator = new SynergyCalculator(EPIC_SYNERGY_MATRIX);
+    this.chaosEngine = new ChaosEngine();
+    this.ecosystem = new EcosystemSimulation();
+    this.stateMachine = createBattleStateMachine();
+    
+    // Biological tick - 500ms
+    this.setSimulationInterval(() => this.biologicalTick(), 500);
+  }
+  
+  private biologicalTick() {
+    const state = this.state;
+    
+    // Phase 1: State Machine Update
+    this.stateMachine.update(state);
+    
+    // Phase 2: Metabolism (energy, aging, stress)
+    this.metabolismSystem.update(state);
+    
+    // Phase 3: Ecosystem (environment changes)
+    this.ecosystem.update(state);
+    
+    // Phase 4: Synergy Calculation (parameter interactions)
+    this.synergyCalculator.recalculate(state);
+    
+    // Phase 5: Chaos Check (unpredictability)
+    this.chaosEngine.injectRandomness(state);
+    
+    // Phase 6: Biological Spread (with all modifiers)
+    this.biologicalSpreadPhase();
+    
+    // Phase 7: Biological Combat (with chaos)
+    this.biologicalCombatPhase();
+    
+    // Phase 8: Infestation & Mutation
+    this.biologicalInfestationPhase();
+    
+    // Phase 9: Weird Events (every 100 ticks)
+    if (state.tick % 100 === 0) {
+      this.chaosEngine.rollWeirdEvent(state);
+    }
+    
+    // Phase 10: Victory Check
+    this.checkBioVictory();
+    
+    // Sync to clients with biological data
+    this.broadcast('bioTick', {
+      tick: state.tick,
+      grid: state.battleGrid,
+      environment: state.environmentSnapshot,
+      events: state.recentEvents,
+      weirdness: state.currentWeirdness  // NEW: Send weird events to client
+    });
+  }
+}
+7.2 Client-Side Visualization of Emergence
+TypeScript
+Copy
+class BioBattleRenderer extends BattleRenderer {
+  private effectPools: Map<string, Container[]> = new Map();
+  
+  renderCell(cell: BioCell) {
+    // Base rendering
+    super.renderCell(cell);
+    
+    // Visualize biological state
+    switch (cell.biologicalState) {
+      case 'LATENT':
+        this.addPulseEffect(cell, 0.2, 0x444444); // Dim, slow pulse
+        break;
+      case 'DESPERATE':
+        this.addShakeEffect(cell, 2); // Violent shaking
+        this.addGlow(cell, 0xff0000, 2.0); // Red intense glow
+        break;
+      case 'HYPERMUTATING':
+        this.addGlitchEffect(cell); // Digital glitch
+        this.addColorShift(cell); // Rapid color cycling
+        break;
+      case 'CANNIBAL':
+        this.addBloodTint(cell); // Reddish overlay
+        this.addTeeth(cell); // Small "mouth" graphics
+        break;
+      case 'SENESCENT':
+        this.addZombieEffect(cell); // Grey, decayed look
+        break;
+      case 'QUANTUM':
+        this.addQuantumEffect(cell); // Flickering, uncertain existence
+        break;
+    }
+    
+    // Visualize synergy strength
+    if (cell.synergyMultiplier > 1.5) {
+      this.addSynergyAura(cell, cell.synergyMultiplier);
+    }
+    
+    // Visualize chaos/errors
+    if (cell.hasChaosEffect) {
+      this.addChaosIndicator(cell, cell.chaosEffectType);
+    }
+    
+    // Visualize environment
+    if (cell.environment.toxicityLevel > 0.5) {
+      this.addToxicOverlay(cell, cell.environment.toxicityLevel);
+    }
+    if (cell.environment.temperature > 35) {
+      this.addHeatShimmer(cell);
+    }
+    if (cell.environment.mutationHotspot) {
+      this.addMutationGlow(cell);
+    }
+  }
+}
+📝 PART 8: IMPLEMENTATION CHECKLIST FOR AI CODER
+Phase 1: Core Biological Systems
+[ ] Implement HiddenGenome interface for all cells
+[ ] Create BiologicalStateMachine with 11 states
+[ ] Build MetabolismSystem (energy, aging, stress)
+[ ] Add SynergyCalculator with 10-parameter matrix
+[ ] Implement basic ChaosEngine (12+ error types)
+Phase 2: Ecosystem & Environment
+[ ] Create CellEnvironment with 6+ properties
+[ ] Implement feedback loops (overcrowding, heat, toxins)
+[ ] Add mutation hotspots (5% of cells)
+[ ] Build nutrient depletion/regeneration
+Phase 3: Emergent Behaviors
+[ ] Implement 10 AI archetypes (including new ARTIST)
+[ ] Create triad synergy detector (8 combinations)
+[ ] Add "Weird Events" system (20 events)
+[ ] Build personality quirks system
+Phase 4: Polish & Visualization
+[ ] Add biological state visual effects
+[ ] Implement synergy aura rendering
+[ ] Create chaos effect indicators
+[ ] Add environmental visual feedback (heat, toxins, hotspots)
+[ ] Optimize with object pooling
+🎯 FINAL SUMMARY FOR AI CODER
+Your Mission: Transform ViRU5 from a simple strategy game into a living biological simulation using the existing 10-parameter architecture.
+Key Requirements:
+Every cell has a secret life - HiddenGenome tracks stress, memory, mutations, "soul"
+Parameters interact non-linearly - Synergy matrix creates 30+ emergent phenomena
+Environment is alive - Grid has nutrients, temperature, toxins that evolve
+Chaos is a feature - 5-10% error rate creates "biological mistakes"
+Weird events reshape reality - Every 100 ticks, roll for world-altering events
+AI has personality - 10 archetypes with quirks, emergent behaviors, and "souls"
+Visual feedback tells stories - Every effect communicates biological state
+The Result: A game where no two battles are identical, where players discover new "builds" constantly, and where watching the simulation is as engaging as playing it. Viruses should feel like living creatures with personalities - sometimes predictable, often surprising, occasionally bizarre.
+Implementation Priority: Core systems → Synergies → Environment → Chaos → AI Personalities → Visual Polish
+Success Metric: After 10 battles with identical starting parameters, each should play out differently due to emergent chaos, environmental factors, and AI personality quirks.

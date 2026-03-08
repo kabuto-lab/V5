@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tentacle Follower</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #0f172a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        canvas { display: block; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #4ade80;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+        .key-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- UI Overlay -->
+    <div class="absolute top-4 left-4 z-10 w-80 glass-panel rounded-xl p-6 text-white transition-all duration-300 hover:shadow-[0_0_40px_rgba(74,222,128,0.15)]">
+        <h1 class="text-xl font-bold mb-1 text-green-400 tracking-wider">TENTACLE<span class="text-white font-light">FOLLOW</span></h1>
+        <p class="text-xs text-gray-400 mb-6 border-b border-gray-700 pb-2">Interactive Inverse Kinematics</p>
+
+        <div class="space-y-5">
+            <!-- Segment Count -->
+            <div>
+                <div class="flex justify-between mb-1">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-gray-300">Segments</label>
+                    <span id="val-count" class="text-xs font-mono text-green-400">20</span>
+                </div>
+                <input type="range" id="inp-count" min="1" max="100" value="20" step="1">
+            </div>
+
+            <!-- Spacing -->
+            <div>
+                <div class="flex justify-between mb-1">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-gray-300">Spacing</label>
+                    <span id="val-spacing" class="text-xs font-mono text-green-400">20</span>
+                </div>
+                <input type="range" id="inp-spacing" min="5" max="60" value="20" step="1">
+            </div>
+
+            <!-- Smoothness (Lag) -->
+            <div>
+                <div class="flex justify-between mb-1">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-gray-300">Smoothness</label>
+                    <span id="val-smooth" class="text-xs font-mono text-green-400">0.15</span>
+                </div>
+                <input type="range" id="inp-smooth" min="0.01" max="1.0" value="0.15" step="0.01">
+            </div>
+
+             <!-- Speed -->
+             <div>
+                <div class="flex justify-between mb-1">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-gray-300">Move Speed</label>
+                    <span id="val-speed" class="text-xs font-mono text-green-400">5</span>
+                </div>
+                <input type="range" id="inp-speed" min="1" max="15" value="5" step="0.5">
+            </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-700 text-xs text-gray-400 flex items-center gap-2">
+            <span>Use</span>
+            <div class="flex gap-1">
+                <span class="key-badge">W</span>
+                <span class="key-badge">A</span>
+                <span class="key-badge">S</span>
+                <span class="key-badge">D</span>
+            </div>
+            <span>to move</span>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // State
+        let width, height;
+        const mouse = { x: 0, y: 0 };
+        const keys = { w: false, a: false, s: false, d: false };
+        
+        // Configuration
+        const config = {
+            count: 20,
+            spacing: 20,
+            smoothness: 0.15, // Lower is more lag/smooth
+            speed: 5,
+            headRadius: 15,
+            tailRadius: 6
+        };
+
+        // Entities
+        const head = { x: 0, y: 0, vx: 0, vy: 0 };
+        const segments = []; // Array of {x, y}
+
+        // UI Elements
+        const ui = {
+            count: document.getElementById('inp-count'),
+            spacing: document.getElementById('inp-spacing'),
+            smooth: document.getElementById('inp-smooth'),
+            speed: document.getElementById('inp-speed'),
+            valCount: document.getElementById('val-count'),
+            valSpacing: document.getElementById('val-spacing'),
+            valSmooth: document.getElementById('val-smooth'),
+            valSpeed: document.getElementById('val-speed'),
+        };
+
+        // Initialization
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Center head initially
+            if (head.x === 0 && head.y === 0) {
+                head.x = width / 2;
+                head.y = height / 2;
+                initSegments();
+            }
+        }
+
+        function initSegments() {
+            segments.length = 0;
+            for (let i = 0; i < config.count; i++) {
+                segments.push({
+                    x: head.x - (i * config.spacing),
+                    y: head.y,
+                    // We don't store velocity for segments in this simple implementation, 
+                    // we use lerp (linear interpolation) which is similar to SmoothDamp but simpler.
+                    // To make it more physics-like, we could store vx, vy.
+                });
+            }
+        }
+
+        // Input Handling
+        window.addEventListener('resize', resize);
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (keys.hasOwnProperty(key)) keys[key] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+            if (keys.hasOwnProperty(key)) keys[key] = false;
+        });
+
+        // UI Listeners
+        ui.count.addEventListener('input', (e) => {
+            config.count = parseInt(e.target.value);
+            ui.valCount.textContent = config.count;
+            // Adjust array size
+            if (config.count > segments.length) {
+                const last = segments[segments.length - 1] || head;
+                for (let i = segments.length; i < config.count; i++) {
+                    segments.push({ x: last.x, y: last.y });
+                }
+            } else {
+                segments.length = config.count;
+            }
+        });
+
+        ui.spacing.addEventListener('input', (e) => {
+            config.spacing = parseInt(e.target.value);
+            ui.valSpacing.textContent = config.spacing;
+        });
+
+        ui.smooth.addEventListener('input', (e) => {
+            config.smoothness = parseFloat(e.target.value);
+            ui.valSmooth.textContent = config.smoothness;
+        });
+
+        ui.speed.addEventListener('input', (e) => {
+            config.speed = parseFloat(e.target.value);
+            ui.valSpeed.textContent = config.speed;
+        });
+
+        // Physics & Logic
+        function update() {
+            // Move Head
+            let dx = 0;
+            let dy = 0;
+            if (keys.w) dy -= 1;
+            if (keys.s) dy += 1;
+            if (keys.a) dx -= 1;
+            if (keys.d) dx += 1;
+
+            // Normalize diagonal movement
+            if (dx !== 0 || dy !== 0) {
+                const len = Math.sqrt(dx*dx + dy*dy);
+                dx /= len;
+                dy /= len;
+            }
+
+            head.x += dx * config.speed;
+            head.y += dy * config.speed;
+
+            // Boundary constraints (bounce)
+            if (head.x < config.headRadius) head.x = config.headRadius;
+            if (head.x > width - config.headRadius) head.x = width - config.headRadius;
+            if (head.y < config.headRadius) head.y = config.headRadius;
+            if (head.y > height - config.headRadius) head.y = height - config.headRadius;
+
+            // Update Segments (Inverse Kinematics / Follow logic)
+            // The first segment follows the head
+            follow(segments[0], head);
+
+            // Subsequent segments follow the previous one
+            for (let i = 1; i < segments.length; i++) {
+                follow(segments[i], segments[i-1]);
+            }
+        }
+
+        // Smooth Follow Logic (Lerp towards target)
+        function follow(current, target) {
+            const dx = target.x - current.x;
+            const dy = target.y - current.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
+            // We want the segment to stay at 'spacing' distance from target
+            // But we use SmoothDamp style approach for position, not just rigid distance constraint
+            
+            // Target position for the segment (behind the target object)
+            // This calculates the angle to place it exactly 'spacing' pixels away
+            // But to make it "drag", we just move it towards the ideal position
+            
+            const angle = Math.atan2(dy, dx);
+            
+            // Ideal position is exactly 'spacing' distance away from target
+            const targetX = target.x - Math.cos(angle) * config.spacing;
+            const targetY = target.y - Math.sin(angle) * config.spacing;
+
+            // SmoothDamp / Lerp
+            // current = current + (target - current) * factor
+            current.x += (targetX - current.x) * config.smoothness;
+            current.y += (targetY - current.y) * config.smoothness;
+        }
+
+        // Rendering
+        function draw() {
+            // Clear with trail effect
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.4)'; // Semi-transparent background for trails
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Connections (Line)
+            if (segments.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(head.x, head.y);
+                for (let i = 0; i < segments.length; i++) {
+                    // Quadratic bezier for smoother lines between segments
+                    // Or just straight lines. Let's do straight lines for performance/simplicity
+                    ctx.lineTo(segments[i].x, segments[i].y);
+                }
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = config.tailRadius * 2;
+                ctx.strokeStyle = 'rgba(20, 83, 45, 0.5)'; // Dark green semi-transparent
+                ctx.stroke();
+            }
+
+            // Draw Head
+            ctx.beginPath();
+            ctx.arc(head.x, head.y, config.headRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#4ade80'; // Tailwind green-400
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#4ade80';
+            ctx.fill();
+            ctx.shadowBlur = 0; // Reset
+
+            // Draw Segments
+            for (let i = 0; i < segments.length; i++) {
+                const s = segments[i];
+                // Calculate radius based on index (tapering)
+                const progress = i / (segments.length || 1);
+                const r = config.headRadius - (progress * (config.headRadius - config.tailRadius));
+                
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, Math.max(2, r), 0, Math.PI * 2);
+                
+                // Color gradient from bright green to dark green
+                const greenVal = Math.floor(74 - (progress * 40)); // 74 -> 34
+                ctx.fillStyle = `rgb(${Math.floor(20 * progress)}, ${greenVal + 40}, ${Math.floor(20 * progress)})`;
+                
+                ctx.fill();
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        // Start
+        resize();
+        loop();
+
+    </script>
+</body>
+</html>

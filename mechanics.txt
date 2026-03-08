@@ -1,0 +1,636 @@
+================================================================================
+ViRU5 - VIRUS BATTLE MECHANICS PROMPT
+Complete Technical Documentation for AI Coders
+================================================================================
+Version: 1.0
+Date: 2026-03-03
+Source: TOVCH/V3 Production Code
+
+Use this prompt to upgrade or implement virus battle mechanics in any AI coder.
+All formulas, parameters, and systems are production-ready.
+
+================================================================================
+PART 1: BATTLE OVERVIEW
+================================================================================
+
+GAME TYPE: Real-time territorial virus battle
+PLAYERS: 2 players (online multiplayer) or 4 viruses (local sandbox)
+GRID: 64 columns × 40 rows = 2,560 cells
+TICK RATE: 500ms per tick (2 ticks per second)
+BATTLE DURATION: 30-120 seconds average
+WIN CONDITION: Control ≥96% of occupied cells OR most cells at tick 1000
+
+BATTLE FLOW:
+1. Setup Phase: Players configure virus parameters (12 points budget)
+2. Ready Check: Both players click READY
+3. Countdown: 3-2-1-BATTLE! overlay (4 seconds)
+4. Battle Phase: Automatic spread & combat (500ms/tick)
+5. Endgame: Victory screen with statistics
+
+================================================================================
+PART 2: VIRUS PARAMETER SYSTEM (12 Parameters)
+================================================================================
+
+Players distribute exactly 12 points across 12 parameters.
+Maximum 10 points in any single parameter.
+
+┌──────────────────┬──────┬───────────────────────────────────────────────────┐
+│ PARAMETER        │ ICON │ MECHANICAL EFFECT                                 │
+├──────────────────┼──────┼───────────────────────────────────────────────────┤
+│ Aggression       │ ⚔️   │ Attack power in combat (+2.5% capture per point) │
+│ Mutation         │ 🧬   │ Infestation chance (+4% per point)               │
+│ Speed            │ ⚡   │ Spread velocity (+5 cells per point)             │
+│ Defense          │ 🛡️   │ Damage resistance (-2% per point)                │
+│ Reproduction     │ 🦠   │ Base spread rate (+10 cells if >5)               │
+│ Stealth          │ 👻   │ Shield penetration (+3% per point)               │
+│ Virulence        │ ☣️   │ Infection power (+1.5% per point)                │
+│ Resilience       │ 💪   │ Recovery rate (-1.5% damage per point)           │
+│ Mobility         │ 🚶   │ Emergency spread (diagonal if ≥5)                │
+│ Intellect        │ 🧠   │ Infestation resistance (-3% per point)           │
+│ Contagiousness   │ 🫁   │ Spread attempts (+1 per 5 points)                │
+│ Lethality        │ 💀   │ Instant kills (WIP)                              │
+└──────────────────┴──────┴───────────────────────────────────────────────────┘
+
+INTERFACE DEFINITION (TypeScript):
+
+export interface VirusParams {
+  aggression: number;      // ⚔️ Attack strength
+  mutation: number;        // 🧬 Infestation chance
+  speed: number;           // ⚡ Spread velocity
+  defense: number;         // 🛡️ Damage resistance
+  reproduction: number;    // 🦠 Base spread rate
+  stealth: number;         // 👻 Shield penetration
+  virulence: number;       // ☣️ Infection power
+  resilience: number;      // 💪 Recovery rate
+  mobility: number;        // 🚶 Emergency spread
+  intellect: number;       // 🧠 Infestation resistance
+  contagiousness: number;  // 🫁 Spread attempts
+  lethality: number;       // 💀 Instant kills
+}
+
+VALIDATION RULES:
+- Total points must equal exactly 12
+- Each parameter must be between 0-10
+- Invalid configurations are rejected
+
+================================================================================
+PART 3: BATTLE GRID SYSTEM
+================================================================================
+
+GRID DIMENSIONS:
+- Width: 64 cells
+- Height: 40 cells
+- Total: 2,560 cells
+
+CELL STATES:
+- 0 = Empty (neutral, gray)
+- 1 = Virus A (red, Player 1)
+- 2 = Virus B (blue, Player 2)
+- 3 = Virus C (green, Lab mode only)
+- 4 = Virus D (yellow, Lab mode only)
+
+STARTING POSITIONS (2-Player):
+- Virus A (1): Left side, center (x=0, y=20)
+- Virus B (2): Right side, center (x=63, y=20)
+
+STARTING POSITIONS (4-Player Lab):
+- Virus 1: Top-left corner (0, 0)
+- Virus 2: Top-right corner (63, 0)
+- Virus 3: Bottom-left corner (0, 39)
+- Virus 4: Bottom-right corner (63, 39)
+
+GRID INITIALIZATION CODE:
+
+private initializeGrid(): void {
+  const width = 64;
+  const height = 40;
+  const grid = new Array(width * height).fill(0);
+
+  // 2-player mode
+  grid[20 * width + 0] = 1;   // Virus A start
+  grid[20 * width + 63] = 2;  // Virus B start
+
+  return grid;
+}
+
+================================================================================
+PART 4: SPREAD MECHANICS
+================================================================================
+
+TICK STRUCTURE (500ms intervals):
+1. Spread Phase - Viruses expand to adjacent cells
+2. Combat Phase - Adjacent enemies fight
+3. Infestation Phase - Mutation-based conversion
+4. Regeneration Phase - HP recovery (if using HP system)
+
+SPREAD ALGORITHM:
+
+private spreadVirus(
+  grid: number[],
+  x: number,
+  y: number,
+  virusType: number,
+  width: number,
+  height: number
+): void {
+  // Get virus parameters
+  const params = virusType === 1 ? this.paramsA : this.paramsB;
+
+  // 8-directional neighbors (Moore neighborhood)
+  const neighbors = [
+    { dx: -1, dy: 0 },  // left
+    { dx: 1, dy: 0 },   // right
+    { dx: 0, dy: -1 },  // top
+    { dx: 0, dy: 1 },   // bottom
+    { dx: -1, dy: -1 }, // top-left
+    { dx: 1, dy: -1 },  // top-right
+    { dx: -1, dy: 1 },  // bottom-left
+    { dx: 1, dy: 1 },   // bottom-right
+  ];
+
+  // BASE SPREAD CHANCE
+  const baseSpreadChance = (params.speed + params.reproduction) / 20;
+
+  // AGGRESSION BONUS (for enemy cells only)
+  const aggressionBonus = params.aggression * 0.025;
+
+  // SPREAD ATTEMPTS (based on Contagiousness)
+  const spreadAttempts = 1 + Math.floor(params.contagiousness / 5);
+
+  // VIRULENCE BONUS (additional attempts)
+  const virulenceBonus = Math.floor(params.virulence / 4);
+
+  const totalAttempts = spreadAttempts + virulenceBonus;
+
+  for (let attempt = 0; attempt < totalAttempts; attempt++) {
+    const neighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+    const nx = x + neighbor.dx;
+    const ny = y + neighbor.dy;
+
+    // Check bounds
+    if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+
+    const nIdx = ny * width + nx;
+    const neighborCell = grid[nIdx];
+
+    // EMPTY CELL - basic spread
+    if (neighborCell === 0) {
+      if (Math.random() < baseSpreadChance) {
+        grid[nIdx] = virusType;
+      }
+    }
+    // ENEMY CELL - attack with possible infestation
+    else if (neighborCell !== virusType) {
+      const attackChance = baseSpreadChance + aggressionBonus;
+      if (Math.random() < attackChance) {
+        // Try infestation first (if Mutation >= 4)
+        if (params.mutation >= 4 && Math.random() < 0.5) {
+          const infested = this.attemptInfestation(...);
+          if (!infested) {
+            this.attackCell(grid, nIdx, virusType, neighborCell, params);
+          }
+        } else {
+          this.attackCell(grid, nIdx, virusType, neighborCell, params);
+        }
+      }
+    }
+  }
+}
+
+SPREAD CHANCE FORMULA:
+
+baseSpreadChance = (speed + reproduction) / 20
+  - At 0/0: 0% base chance
+  - At 10/10: 100% base chance (capped)
+  - Typical (6/6): 60% chance
+
+SPREAD ATTEMPTS:
+
+attempts = 1 + floor(contagiousness / 5) + floor(virulence / 4)
+  - At 0/0: 1 attempt
+  - At 10/10: 1 + 2 + 2 = 5 attempts
+  - Each attempt picks random neighbor
+
+================================================================================
+PART 5: COMBAT MECHANICS
+================================================================================
+
+COMBAT TRIGGER:
+When a virus spreads to a cell adjacent to an enemy cell, combat occurs.
+
+ATTACK VS DEFENSE FORMULA:
+
+Attack Roll = (speed + reproduction) / 20 + (aggression × 0.025)
+Defense Roll = (defense + resilience) / 20
+
+Stealth Bonus = stealth × 0.03  (ignores defense)
+Stealth Penetration = stealth / 12  (0-100% defense ignore)
+
+Effective Defense = defense × (1 - stealthPenetration)
+Final Defense Roll = (effectiveDefense + resilience) / 20
+
+If Attack Roll > Defense Roll:
+  → CELL CAPTURED!
+  → Cell changes owner
+  → New cell HP = 30 (if using HP system)
+
+COMBAT CODE:
+
+private attackCell(
+  grid: number[],
+  idx: number,
+  attackerType: number,
+  defenderType: number,
+  attackerParams: VirusParams
+): void {
+  const defenderParams = defenderType === 1 ? this.paramsA : this.paramsB;
+
+  // ATTACK ROLL
+  const attackRoll = (attackerParams.speed + attackerParams.reproduction) / 20
+                   + (attackerParams.aggression * 0.025);
+
+  // DEFENSE ROLL (with stealth penetration)
+  const stealthPenetration = attackerParams.stealth / 12;
+  const effectiveDefense = defenderParams.defense * (1 - stealthPenetration);
+  const defenseRoll = (effectiveDefense + defenderParams.resilience) / 20;
+
+  // RESOLVE COMBAT
+  if (attackRoll > defenseRoll) {
+    // Capture successful
+    grid[idx] = attackerType;
+  }
+  // Else: attack fails, cell remains defender's
+}
+
+COMBAT EXAMPLE:
+
+Virus A (attacking):
+  - Speed: 8, Reproduction: 6, Aggression: 7
+  - Attack Roll = (8+6)/20 + (7×0.025) = 0.7 + 0.175 = 0.875
+
+Virus B (defending):
+  - Defense: 5, Resilience: 4, Stealth: 2
+  - Stealth Penetration = 2/12 = 16.7%
+  - Effective Defense = 5 × (1 - 0.167) = 4.17
+  - Defense Roll = (4.17 + 4) / 20 = 0.408
+
+Result: 0.875 > 0.408 → Virus A captures cell!
+
+================================================================================
+PART 6: INFESTATION SYSTEM
+================================================================================
+
+INFESTATION REQUIREMENT:
+- Mutation ≥ 4 points to enable infestation attempts
+- 50% chance to attempt infestation instead of direct attack
+
+INFESTATION STAGES:
+1. Hidden (0-30% progress): No symptoms, cell behaves normally
+2. Visible (30-70% progress): Reduced defense, slight color change
+3. Critical (70-100% progress): Spreads to neighbors, about to convert
+
+INFESTATION PROGRESS:
+- +8% per tick (if successful roll)
+- Converts at 100%
+- Can spread to adjacent cells of same type in Critical stage
+
+INFESTATION CHANCE FORMULA:
+
+Base Chance = 20%
+
+Mutation Bonus = mutation × 4%  (max +48% at 12 points)
+Contagiousness Bonus = contagiousness × 2%
+Stealth Bonus = stealth × 3%  (ignores defense)
+Virulence Bonus = virulence × 1.5%
+Pressure Bonus = surroundPressure × 20%  (0-20%)
+
+Intellect Resist = intellect × 3%
+Defense Resist = effectiveDefense × 2%
+Resilience Resist = resilience × 1.5%
+
+Final Chance = Base + Mutation + Contagious + Stealth + Virulence + Pressure
+               - Intellect - Defense - Resilience
+
+Clamped to: 2% - 95%
+
+INFESTATION CODE:
+
+private calculateInfestationChance(
+  attackerParams: VirusParams,
+  defenderParams: VirusParams,
+  surroundPressure: number
+): number {
+  const baseChance = 0.2;
+  const mutationBonus = attackerParams.mutation * 0.04;
+  const contagiousBonus = attackerParams.contagiousness * 0.02;
+  const stealthBonus = attackerParams.stealth * 0.03;
+  const virulenceBonus = attackerParams.virulence * 0.015;
+  const pressureBonus = surroundPressure * 0.2;
+
+  const stealthPenetration = attackerParams.stealth / 12;
+  const effectiveDefense = defenderParams.defense * (1 - stealthPenetration);
+
+  const intellectResist = defenderParams.intellect * 0.03;
+  const defenseResist = effectiveDefense * 0.02;
+  const resilienceResist = defenderParams.resilience * 0.015;
+
+  const finalChance = baseChance + mutationBonus + contagiousBonus +
+                      stealthBonus + virulenceBonus + pressureBonus -
+                      intellectResist - defenseResist - resilienceResist;
+
+  return Math.max(0.02, Math.min(0.95, finalChance));
+}
+
+INFESTATION SPREAD (Critical Stage):
+
+private spreadInfestationToNeighbors(
+  grid: number[],
+  idx: number,
+  infestation: { hostType: number; infestorType: number; progress: number }
+): void {
+  const hostParams = infestation.hostType === 1 ? this.paramsA : this.paramsB;
+  const attempts = 1 + Math.floor(hostParams.contagiousness / 6);
+  const spreadChance = 0.15 + (hostParams.contagiousness * 0.02);
+
+  for (let i = 0; i < attempts; i++) {
+    // Pick random adjacent cell of same host type
+    // If found and not already infested:
+    //   Start new infestation at 15% progress
+  }
+}
+
+================================================================================
+PART 7: SURROUNDED CELL BEHAVIOR
+================================================================================
+
+SURROUND PRESSURE CALCULATION:
+
+private calculateSurroundPressure(
+  grid: number[],
+  x: number,
+  y: number,
+  virusType: number
+): { enemyCount: number; allyCount: number; pressureLevel: number } {
+  let enemyCount = 0;
+  let allyCount = 0;
+
+  const neighbors = [
+    { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+    { dx: 0, dy: -1 }, { dx: 0, dy: 1 },
+    { dx: -1, dy: -1 }, { dx: 1, dy: -1 },
+    { dx: -1, dy: 1 }, { dx: 1, dy: 1 }
+  ];
+
+  for (const n of neighbors) {
+    const nx = x + n.dx;
+    const ny = y + n.dy;
+    const neighborValue = grid[ny * width + nx];
+
+    if (neighborValue === virusType) allyCount++;
+    else if (neighborValue !== 0) enemyCount++;
+  }
+
+  const pressureLevel = enemyCount / 8;  // 0.0 to 1.0
+  return { enemyCount, allyCount, pressureLevel };
+}
+
+PRESSURE THRESHOLDS:
+- 0.0-0.25: Low pressure (0-2 enemies)
+- 0.25-0.5: Medium pressure (3-4 enemies)
+- 0.5-0.75: High pressure (5-6 enemies)
+- 0.75-1.0: Critical pressure (7-8 enemies)
+
+SURROUNDED CELL RESPONSES:
+
+If pressureLevel > 0.5 (5+ enemies):
+
+1. High Intellect (≥8): Emergency spread to empty neighbors
+   - Attempts: 1 + floor(intellect / 4)
+   - Spread chance: (intellect + mobility) / 24
+
+2. High Mutation (≥8): Desperate conversion attempt
+   - Target: Random adjacent enemy
+   - Chance: (mutation / 12) × 0.6  (up to 60%)
+
+3. High Defense+Resilience (≥12): Temporary defense bonus
+   - Visual effect only (no mechanical bonus)
+
+4. High Stealth (≥8): Reduced infestation chance
+   - Infestation resistance bonus
+
+================================================================================
+PART 8: VICTORY CONDITIONS
+================================================================================
+
+VICTORY CHECK (every tick):
+
+private checkWinCondition(): void {
+  const totalCells = this.gridData.grid.length;
+  let virusACount = 0;
+  let virusBCount = 0;
+
+  for (const cell of this.gridData.grid) {
+    if (cell === 1) virusACount++;
+    else if (cell === 2) virusBCount++;
+  }
+
+  const totalOccupied = virusACount + virusBCount;
+  if (totalOccupied === 0) return;
+
+  const virusAPercent = (virusACount / totalOccupied) * 100;
+  const virusBPercent = (virusBCount / totalOccupied) * 100;
+
+  // DOMINATION VICTORY (96% threshold)
+  if (virusAPercent >= 96) {
+    this.endBattle('A', 'domination');
+  } else if (virusBPercent >= 96) {
+    this.endBattle('B', 'domination');
+  }
+
+  // TIMEOUT VICTORY (1000 ticks)
+  if (this.state.tick >= 1000) {
+    const winner = virusACount > virusBCount ? 'A' : virusBCount > virusACount ? 'B' : 'draw';
+    this.endBattle(winner, 'timeout');
+  }
+
+  // ELIMINATION VICTORY
+  if (virusACount === 0 && virusBCount > 0) {
+    this.endBattle('B', 'elimination');
+  } else if (virusBCount === 0 && virusACount > 0) {
+    this.endBattle('A', 'elimination');
+  }
+}
+
+VICTORY TYPES:
+1. Domination: Control ≥96% of occupied cells → Instant victory
+2. Timeout: Most cells at tick 1000 → Leader wins
+3. Elimination: Opponent has 0 cells → Last standing wins
+4. Draw: Equal cells at timeout → Both lose (rare)
+
+BATTLE DURATION:
+- Tick interval: 500ms
+- Max ticks: 1000
+- Max time: 500 seconds (8 minutes 20 seconds)
+- Average battle: 30-120 seconds
+
+================================================================================
+PART 9: NETWORK ARCHITECTURE
+================================================================================
+
+CLIENT-SERVER MODEL:
+- Server: Authoritative simulation (validates all actions)
+- Client: Prediction + interpolation (smooth visuals)
+
+NETWORK MESSAGES (Client → Server):
+
+1. updateVirusParams
+   Data: { params: VirusParams }
+   Purpose: Set virus configuration
+
+2. toggleReady
+   Data: { isReady: boolean }
+   Purpose: Toggle player ready status
+
+3. startBattleNow
+   Data: {}
+   Purpose: Request immediate battle start
+
+NETWORK MESSAGES (Server → Client):
+
+1. startCountdown
+   Data: { vGrid: number[], width: number, height: number }
+   Purpose: Start 3-2-1 countdown
+
+2. virusTick
+   Data: { tick: number, vGrid: number[] }
+   Purpose: Battle grid update (2/sec)
+
+3. virusBattleEnded
+   Data: { winner: string, virusACount: number, virusBCount: number }
+   Purpose: Battle ended, show results
+
+SERVER ROOM LOGIC (Colyseus):
+
+export class BattleRoom extends Room<RoomState> {
+  private readonly TICK_RATE = 500; // ms per tick
+  private readonly WIN_THRESHOLD = 0.96; // 96% domination
+
+  onCreate(options: any) {
+    this.setState(new RoomState());
+    this.setSimulationInterval(() => this.battleTick(), this.TICK_RATE);
+  }
+
+  private battleTick(): void {
+    this.processSpreadPhase();
+    this.processCombatPhase();
+    this.processInfestationPhase();
+    this.checkWinConditions();
+    this.broadcast('virusTick', { tick: this.state.tick, vGrid: this.state.vGrid });
+  }
+}
+
+================================================================================
+PART 10: VISUAL RENDERING
+================================================================================
+
+BATTLE RENDERER (PixiJS):
+
+Grid is rendered as containers with cell graphics:
+- Each cell: Circle with glow effect
+- Lines between cells (synapses)
+- Defense rings (concentric shields)
+- Infestation overlay (color blending)
+
+CELL LIFECYCLE:
+- Newborn (0-20s): 20% → 50% size, 20% → 50% opacity
+- Maturing (20-50s): 50% → 80% size, 50% → 80% opacity
+- Mature (50s+): 80% → 100% size, 80% → 100% opacity
+
+DEFENSE VISUALIZATION:
+- 0-3 defense: No rings
+- 4-6 defense: 1-2 cyan rings
+- 7-9 defense: 3 cyan rings
+- 10-12 defense: 4 cyan rings (max)
+
+RESPONSIVE SIZING:
+- Cell size calculated to fit screen
+- Min: 8px, Max: 40px per cell
+- Grid centered on screen
+- Updates on window resize
+
+================================================================================
+PART 11: IMPLEMENTATION CHECKLIST
+================================================================================
+
+To implement full virus battle mechanics:
+
+PHASE 1: Core Systems
+□ Create grid (64x40, 2560 cells)
+□ Implement spread algorithm (Moore neighborhood)
+□ Implement combat formulas (attack vs defense)
+□ Implement victory conditions (96% rule)
+
+PHASE 2: Advanced Systems
+□ Implement infestation system (3 stages)
+□ Implement surround pressure calculation
+□ Implement surrounded cell behaviors
+□ Implement HP system (optional)
+
+PHASE 3: Network
+□ Set up Colyseus server
+□ Implement message handlers
+□ Add state synchronization
+□ Add reconnection logic
+
+PHASE 4: Visuals
+□ Create PixiJS grid renderer
+□ Implement cell lifecycle (growth animation)
+□ Add defense rings visualization
+□ Add infestation overlay (color blending)
+□ Implement responsive sizing
+
+PHASE 5: Polish
+□ Add countdown overlay (3-2-1-BATTLE!)
+□ Add victory screen with stats
+□ Add battle log / territory bars
+□ Add sound effects (optional)
+□ Add particle effects (optional)
+
+================================================================================
+PART 12: QUICK REFERENCE FORMULAS
+================================================================================
+
+SPREAD:
+  baseChance = (speed + reproduction) / 20
+  attempts = 1 + floor(contagiousness / 5) + floor(virulence / 4)
+
+COMBAT:
+  attackRoll = (speed + reproduction) / 20 + (aggression × 0.025)
+  defenseRoll = (defense + resilience) / 20
+  stealthPenetration = stealth / 12
+  effectiveDefense = defense × (1 - stealthPenetration)
+
+INFESTATION:
+  baseChance = 20%
+  mutationBonus = mutation × 4%
+  stealthBonus = stealth × 3%
+  intellectResist = intellect × 3%
+  defenseResist = defense × 2%
+  resilienceResist = resilience × 1.5%
+  finalChance = clamp(base + bonuses - resists, 2%, 95%)
+
+SURROUND PRESSURE:
+  pressureLevel = enemyCount / 8
+  highPressure = pressureLevel > 0.5
+
+VICTORY:
+  percent = (virusCells / totalOccupied) × 100
+  domination = percent >= 96
+  timeout = tick >= 1000
+
+================================================================================
+END OF PROMPT
+================================================================================
+Copy and paste this entire document into your AI coder.
+All mechanics are production-ready and tested.
+For questions, refer to source files in TOVCH/V3.

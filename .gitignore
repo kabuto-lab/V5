@@ -1,0 +1,10 @@
+# Dependencies  
+node_modules/  
+dist/  
+package-lock.json  
+.git/  
+.qwen/  
+DEBUG_FILES*/  
+*.log  
+*.zip  
+*.bat 

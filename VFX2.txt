@@ -1,0 +1,420 @@
+# ViRU5 V5 - VISUAL EFFECTS SPECIFICATION (VFX2)
+**Version:** 2.0  
+**Date:** 2026-03-04  
+**Theme:** Retro Electron Microscope - Smooth Organic Combat
+
+---
+
+## 🎯 DESIGN PHILOSOPHY
+
+**Goal:** Make virus combat feel SMOOTH, ORGANIC, and VISUALLY CLEAR  
+**Constraints:** 60 FPS, <100MB memory, 2560 cells  
+**Style:** Neon on dark, subtle animations, clear feedback
+
+---
+
+## 🥇 TIER 1: ESSENTIAL (High Impact, Low Cost)
+
+### 1.1 Cell Color Transition (Smooth Interpolation) ⭐⭐⭐⭐⭐
+**Problem:** Cells instantly snap colors (jarring)  
+**Solution:** Lerp between colors over 200ms
+
+**Implementation:**
+```typescript
+// Store target color and interpolation progress
+private cellColors: Map<number, {current: number, target: number, progress: number}> = new Map();
+
+// In update loop (every frame):
+cellColors.get(i).progress += 0.05; // 200ms transition
+const newColor = interpolateColor(oldColor, newColor, progress);
+sprite.tint = newColor;
+```
+
+**Visual:** Smooth color morph when cells are captured  
+**Cost:** ~0.1ms per cell, 8 bytes per cell for color data  
+**Priority:** ✅ IMPLEMENT FIRST
+
+---
+
+### 1.2 Capture Pulse Wave ⭐⭐⭐⭐⭐
+**Problem:** No feedback when cell changes owner  
+**Solution:** Expanding ring from cell center
+
+**Implementation:**
+```typescript
+spawnCaptureEffect(cellIndex: number, newColor: number): void {
+  const ring = this.ringPool.find(r => !r.visible);
+  if (!ring) return;
+  
+  ring.x = cellX; ring.y = cellY;
+  ring.scale.set(0.5);
+  ring.alpha = 1.0;
+  ring.tint = newColor;
+  ring.visible = true;
+  
+  // Animate: scale 0.5→2.0, alpha 1.0→0 over 300ms
+}
+```
+
+**Visual:** Satisfying "pop" when territory changes  
+**Cost:** 100 pooled Graphics objects, ~0.5ms per event  
+**Priority:** Implement second
+
+---
+
+### 1.3 Spread Direction Arrows ⭐⭐⭐⭐
+**Problem:** Can't see which way viruses are spreading  
+**Solution:** Tiny arrows point in spread direction
+
+**Implementation:**
+```typescript
+spawnSpreadArrow(fromIndex: number, toIndex: number, color: number): void {
+  const arrow = this.arrowPool.find(a => !a.visible);
+  if (!arrow) return;
+  
+  // Calculate direction, position arrow between cells
+  // Animate: fade out over 400ms
+}
+```
+
+**Visual:** Clear flow patterns, emergent "rivers" of spread  
+**Cost:** 200 pooled arrows, ~0.3ms per spread  
+**Priority:** Implement third
+
+---
+
+### 1.4 Virus-Specific Textures ⭐⭐⭐⭐
+**Problem:** All viruses are just colored squares  
+**Solution:** Subtle pattern overlays
+
+**Patterns:**
+```
+RED:    ⬛ (solid fill)
+BLUE:   ▦ (horizontal stripes, 2px spacing)
+GREEN:  ▒ (2x2 dot grid)
+YELLOW: ▓ (checkerboard 4x4)
+```
+
+**Implementation:**
+```typescript
+// Create 4 textures once at init
+private virusTextures: Map<number, PIXI.Texture> = new Map();
+
+// In BattleRenderer constructor:
+this.virusTextures.set(1, this.createSolidTexture(0xff0000));
+this.virusTextures.set(2, this.createStripedTexture(0x0000ff));
+// etc...
+
+// In update:
+sprite.texture = this.virusTextures.get(cellValue);
+```
+
+**Visual:** Instant recognition, beautiful mosaic when mixed  
+**Cost:** 4 small textures (cached), zero per-frame cost  
+**Priority:** Implement fourth
+
+---
+
+## 🥈 TIER 2: ENHANCEMENTS (Medium Impact)
+
+### 2.1 Territory Borders ⭐⭐⭐⭐
+**Problem:** Hard to see front lines  
+**Solution:** Bright outline where viruses meet
+
+**Implementation:**
+```typescript
+updateCellBorders(): void {
+  for (let i = 0; i < totalCells; i++) {
+    const cellValue = this.currentGrid[i];
+    const neighbors = this.getNeighbors(i);
+    
+    // If any neighbor has different owner, draw border
+    const hasEnemy = neighbors.some(n => this.currentGrid[n] !== cellValue);
+    if (hasEnemy) {
+      this.cellSprites[i].lineStyle(2, 0xffffff, 0.5);
+    }
+  }
+}
+```
+
+**Visual:** Clear battle lines, tactical view  
+**Cost:** 4 neighbor checks per cell, ~1ms total  
+**Priority:** Implement after Tier 1
+
+---
+
+### 2.2 Dominance Glow ⭐⭐⭐
+**Problem:** Can't see which virus is winning  
+**Solution:** Stronger viruses glow brighter
+
+**Implementation:**
+```typescript
+// Calculate dominance per virus (0.0 to 1.0)
+const dominance = virusCellCount / totalOccupiedCells;
+
+// Apply global glow intensity
+const glowIntensity = 0.3 + (dominance * 0.7);
+this.virusGlow.uniforms.glowStrength = glowIntensity;
+```
+
+**Visual:** Emotional tension as glow fades/grows  
+**Cost:** 1 uniform per virus, zero per-cell cost  
+**Priority:** Optional polish
+
+---
+
+### 2.3 Spread Trails ⭐⭐⭐⭐
+**Problem:** Spread feels instant/disconnected  
+**Solution:** Fading trail shows spread path
+
+**Implementation:**
+```typescript
+spawnSpreadTrail(fromIndex: number, toIndex: number, color: number): void {
+  const trail = this.trailPool.find(t => !t.visible);
+  if (!trail) return;
+  
+  trail.x = fromX; trail.y = fromY;
+  trail.tint = color;
+  trail.alpha = 0.6;
+  trail.visible = true;
+  
+  // Fade out over 600ms
+}
+```
+
+**Visual:** Organic flow, like slime mold growth  
+**Cost:** 200 pooled trail cells, ~0.4ms per spread  
+**Priority:** Implement for organic feel
+
+---
+
+### 2.4 Combat Sparks ⭐⭐⭐
+**Problem:** Combat is invisible (just numbers)  
+**Solution:** Tiny sparks when cells fight
+
+**Implementation:**
+```typescript
+spawnCombatSparks(cellIndex: number, attackerColor: number, defenderColor: number): void {
+  for (let i = 0; i < 5; i++) {
+    const spark = this.sparkPool.find(s => !s.visible);
+    if (!spark) continue;
+    
+    // Random direction, speed
+    // Animate: move + fade over 300ms
+  }
+}
+```
+
+**Visual:** Visceral combat feedback  
+**Cost:** 50 pooled particles, ~0.2ms per combat  
+**Priority:** Optional polish
+
+---
+
+## 🥉 TIER 3: POLISH (Nice-to-Have)
+
+### 3.1 Cell Breathing ⭐⭐⭐
+**Problem:** Static squares feel dead  
+**Solution:** Subtle scale pulse (1.0 → 1.05 → 1.0)
+
+**Implementation:**
+```typescript
+updateBreathing(delta: number): void {
+  this.breathTime += delta * 0.001;
+  const scale = 1.0 + Math.sin(this.breathTime * 2) * 0.025;
+  
+  this.cellSprites.forEach(sprite => {
+    sprite.scale.set(scale);
+  });
+}
+```
+
+**Visual:** Organic, living grid  
+**Cost:** 1 sin() per frame, batched scale updates  
+**Priority:** Low (nice but not essential)
+
+---
+
+### 3.2 Victory Shockwave ⭐⭐⭐⭐⭐
+**Problem:** Victory is abrupt  
+**Solution:** Wave expands from winner's cells
+
+**Implementation:**
+```typescript
+triggerVictoryShockwave(winnerColor: number): void {
+  // Create shockwave from all winner cells simultaneously
+  // Expands over 1.5s, flashes all cells to winner color
+}
+```
+
+**Visual:** Epic climax, satisfying ending  
+**Cost:** One-time effect, ~2ms  
+**Priority:** HIGH for game feel
+
+---
+
+### 3.3 Chaos Event Icons ⭐⭐⭐
+**Problem:** Chaos events are invisible  
+**Solution:** Floating icon above affected cell
+
+**Icons:**
+```
+MITOSIS_ERROR      → 🔀 (split)
+REVERSE_POLARITY   → 🔄 (reverse)
+QUANTUM_TUNNEL     → ⚛  (atom)
+TIME_DILATION      → ⏱  (clock)
+```
+
+**Implementation:**
+```typescript
+showChaosIcon(cellIndex: number, eventName: string): void {
+  const icon = this.iconPool.find(i => !i.visible);
+  if (!icon) return;
+  
+  icon.x = cellX; icon.y = cellY - 10;
+  icon.texture = this.chaosIconTextures.get(eventName);
+  icon.visible = true;
+  
+  // Fade out over 2s
+}
+```
+
+**Visual:** Clear cause/effect for chaos  
+**Cost:** 20 pooled icons, texture lookups  
+**Priority:** Medium (clarifies gameplay)
+
+---
+
+### 3.4 Grid Scanlines ⭐⭐
+**Problem:** Flat 2D looks boring  
+**Solution:** Subtle horizontal scanlines
+
+**Implementation:**
+```typescript
+// In cell render:
+if (y % 3 === 0) {
+  sprite.alpha = 0.85;  // Slightly darker
+}
+```
+
+**Visual:** Retro microscope aesthetic  
+**Cost:** 1 modulo per cell, negligible  
+**Priority:** Low (aesthetic only)
+
+---
+
+## ⚠️ WHAT TO AVOID
+
+### ❌ Full-Screen Post-Processing
+```typescript
+// DON'T: Bloom, blur, chromatic aberration on entire screen
+// Reason: 2560 cells × post-processing = FPS death
+```
+
+### ❌ Complex Per-Cell Shaders
+```typescript
+// DON'T: Custom GLSL shader on every cell
+// Reason: 2560 draw calls × shader = 50 FPS
+```
+
+### ❌ Large Particle Bursts
+```typescript
+// DON'T: 100+ particles per event
+// Reason: Memory bloat, GC stutter
+```
+
+### ❌ Physics Simulations
+```typescript
+// DON'T: Rigid body physics for cells
+// Reason: Overkill, performance nightmare
+```
+
+---
+
+## 🎨 VISUAL STYLE GUIDE
+
+### Color Palette
+```
+Background: #1a1a1a (dark gray)
+RED Virus:    #ff0000 (neon red)
+BLUE Virus:   #0000ff (neon blue)
+GREEN Virus:  #00ff00 (neon green)
+YELLOW Virus: #ffff00 (neon yellow)
+UI Text:      #00ffff (cyan)
+Victory:      #ff00ff (magenta)
+```
+
+### Animation Timing
+```
+Color Transition: 200ms (smooth but snappy)
+Capture Pulse:    300ms (satisfying pop)
+Spread Arrow:     400ms (clear direction)
+Trail Fade:       600ms (organic flow)
+Combat Sparks:    300ms (quick feedback)
+Victory Wave:     1500ms (epic climax)
+```
+
+### Motion Principles
+- **Smooth:** Lerp all transitions (no instant snaps)
+- **Organic:** Sine waves, not linear (feels alive)
+- **Clear:** High contrast, instant readability
+- **Fast:** <20ms per frame budget for VFX
+
+---
+
+## 📊 PERFORMANCE BUDGET
+
+| Effect | CPU Time | Memory | Draw Calls |
+|--------|----------|--------|------------|
+| Color Transition | 0.1ms | 8 bytes/cell | 0 |
+| Capture Pulse | 0.5ms | 2KB pool | +100 |
+| Spread Arrows | 0.3ms | 4KB pool | +200 |
+| Virus Textures | 0ms | 1KB cached | 0 |
+| Territory Borders | 1.0ms | 0 | 0 |
+| Spread Trails | 0.4ms | 4KB pool | +200 |
+| Combat Sparks | 0.2ms | 1KB pool | +50 |
+| Cell Breathing | 0.1ms | 0 | 0 |
+| Victory Shockwave | 2.0ms | 0 | +2560 (once) |
+| **TOTAL** | **~5ms** | **~20KB** | **~550** |
+
+**Target:** <16ms per frame (60 FPS)  
+**VFX Budget:** 5ms (leaves 11ms for game logic)
+
+---
+
+## 🚀 IMPLEMENTATION ROADMAP
+
+### Week 1: Foundation (Tier 1)
+- [x] **1.1 Color Transition** (20 lines)
+- [ ] **1.2 Capture Pulse** (30 lines)
+- [ ] **1.4 Virus Textures** (50 lines)
+
+**Result:** Smooth, polished basic combat
+
+### Week 2: Clarity (Tier 2)
+- [ ] **2.1 Territory Borders** (40 lines)
+- [ ] **2.3 Spread Trails** (60 lines)
+
+**Result:** Clear tactical view, organic flow
+
+### Week 3: Polish (Tier 3)
+- [ ] **3.1 Cell Breathing** (15 lines)
+- [ ] **3.2 Victory Shockwave** (40 lines)
+- [ ] **3.3 Chaos Icons** (30 lines)
+
+**Result:** Professional game feel
+
+---
+
+## 📝 NOTES
+
+- All effects use **object pooling** (no GC allocation during battle)
+- All animations are **time-based** (consistent at any FPS)
+- All effects are **optional** (can disable for low-end devices)
+- **Progressive enhancement:** Game works without VFX, better with them
+
+---
+
+**Last Updated:** 2026-03-04  
+**Status:** 1.1 Color Transition IMPLEMENTED ✅  
+**Next:** 1.2 Capture Pulse

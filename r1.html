@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Rope Physics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f172a;
+            cursor: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        .instruction {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #64748b;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Custom Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 2px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        
+        .control-panel {
+            backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="instruction">Move your mouse to swing the rope</div>
+    
+    <!-- Control Panel -->
+    <div class="control-panel absolute top-4 right-4 w-72 p-6 rounded-xl text-slate-200 z-10">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sky-400 font-bold text-sm uppercase tracking-wider">Physics Params</h3>
+            <button id="resetBtn" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded transition-colors">Reset</button>
+        </div>
+        
+        <div class="space-y-4">
+            <!-- Gravity -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-400">Gravity</span>
+                    <span id="gravityVal" class="text-sky-300 font-mono">0.6</span>
+                </div>
+                <input type="range" id="gravity" min="0" max="2" step="0.1" value="0.6">
+            </div>
+            
+            <!-- Friction -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-400">Friction</span>
+                    <span id="frictionVal" class="text-sky-300 font-mono">0.96</span>
+                </div>
+                <input type="range" id="friction" min="0.8" max="1" step="0.01" value="0.96">
+            </div>
+            
+            <!-- Segment Length -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-400">Segment Length</span>
+                    <span id="segLenVal" class="text-sky-300 font-mono">12</span>
+                </div>
+                <input type="range" id="segLen" min="5" max="30" step="1" value="12">
+            </div>
+            
+            <!-- Rope Length -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-400">Rope Segments</span>
+                    <span id="ropeLenVal" class="text-sky-300 font-mono">40</span>
+                </div>
+                <input type="range" id="ropeLen" min="10" max="80" step="1" value="40">
+            </div>
+            
+            <!-- Stiffness -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-400">Stiffness (Iterations)</span>
+                    <span id="stiffnessVal" class="text-sky-300 font-mono">5</span>
+                </div>
+                <input type="range" id="stiffness" min="1" max="20" step="1" value="5">
+            </div>
+        </div>
+        
+        <div class="mt-6 pt-4 border-t border-slate-700">
+            <div class="flex gap-2">
+                <button id="windBtn" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold py-2 px-4 rounded transition-all active:scale-95">
+                    💨 Wind
+                </button>
+                <button id="explodeBtn" class="flex-1 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold py-2 px-4 rounded transition-all active:scale-95">
+                    💥 Explode
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        
+        const DEFAULT_CONFIG = {
+            ropeLength: 40,
+            segmentLength: 12,
+            gravity: 0.6,
+            friction: 0.96,
+            stiffness: 5,
+            circleRadius: 20,
+            ropeColor: '#e2e8f0',
+            anchorColor: '#38bdf8',
+            mouseColor: '#f472b6'
+        };
+
+        let CONFIG = { ...DEFAULT_CONFIG };
+
+        let points = [];
+        let sticks = [];
+        let mouse = { x: 0, y: 0 };
+        let anchor = { x: 0, y: 0 };
+
+        // UI Elements
+        const gravitySlider = document.getElementById('gravity');
+        const frictionSlider = document.getElementById('friction');
+        const segLenSlider = document.getElementById('segLen');
+        const ropeLenSlider = document.getElementById('ropeLen');
+        const stiffnessSlider = document.getElementById('stiffness');
+        
+        const gravityVal = document.getElementById('gravityVal');
+        const frictionVal = document.getElementById('frictionVal');
+        const segLenVal = document.getElementById('segLenVal');
+        const ropeLenVal = document.getElementById('ropeLenVal');
+        const stiffnessVal = document.getElementById('stiffnessVal');
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            anchor.x = width / 2;
+            anchor.y = height - 100;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        window.addEventListener('mousemove', (e) => {
+            // Don't update mouse if over control panel
+            const panel = document.querySelector('.control-panel');
+            const rect = panel.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right && 
+                e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                return;
+            }
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+            e.preventDefault();
+        }, { passive: false });
+
+        class Point {
+            constructor(x, y, pinned = false) {
+                this.x = x;
+                this.y = y;
+                this.oldx = x;
+                this.oldy = y;
+                this.pinned = pinned;
+            }
+
+            update() {
+                if (this.pinned) return;
+
+                const vx = (this.x - this.oldx) * CONFIG.friction;
+                const vy = (this.y - this.oldy) * CONFIG.friction;
+
+                this.oldx = this.x;
+                this.oldy = this.y;
+
+                this.x += vx;
+                this.y += vy;
+                this.y += CONFIG.gravity;
+            }
+        }
+
+        class Stick {
+            constructor(p1, p2, length) {
+                this.p1 = p1;
+                this.p2 = p2;
+                this.length = length;
+            }
+
+            update() {
+                const dx = this.p2.x - this.p1.x;
+                const dy = this.p2.y - this.p1.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+                
+                const diff = (this.length - dist) / dist;
+                
+                const offsetX = dx * diff * 0.5;
+                const offsetY = dy * diff * 0.5;
+
+                if (!this.p1.pinned) {
+                    this.p1.x -= offsetX;
+                    this.p1.y -= offsetY;
+                }
+                if (!this.p2.pinned) {
+                    this.p2.x += offsetX;
+                    this.p2.y += offsetY;
+                }
+            }
+        }
+
+        function initRope() {
+            points = [];
+            sticks = [];
+            
+            const startX = anchor.x;
+            const startY = anchor.y;
+            
+            for (let i = 0; i < CONFIG.ropeLength; i++) {
+                const pinned = (i === 0);
+                const p = new Point(startX, startY - (i * CONFIG.segmentLength), pinned);
+                points.push(p);
+                
+                if (i > 0) {
+                    sticks.push(new Stick(points[i-1], p, CONFIG.segmentLength));
+                }
+            }
+        }
+
+        // Event Listeners for Controls
+        gravitySlider.addEventListener('input', (e) => {
+            CONFIG.gravity = parseFloat(e.target.value);
+            gravityVal.textContent = CONFIG.gravity;
+        });
+
+        frictionSlider.addEventListener('input', (e) => {
+            CONFIG.friction = parseFloat(e.target.value);
+            frictionVal.textContent = CONFIG.friction;
+        });
+
+        segLenSlider.addEventListener('input', (e) => {
+            CONFIG.segmentLength = parseInt(e.target.value);
+            segLenVal.textContent = CONFIG.segmentLength;
+            initRope();
+        });
+
+        ropeLenSlider.addEventListener('input', (e) => {
+            CONFIG.ropeLength = parseInt(e.target.value);
+            ropeLenVal.textContent = CONFIG.ropeLength;
+            initRope();
+        });
+
+        stiffnessSlider.addEventListener('input', (e) => {
+            CONFIG.stiffness = parseInt(e.target.value);
+            stiffnessVal.textContent = CONFIG.stiffness;
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            CONFIG = { ...DEFAULT_CONFIG };
+            gravitySlider.value = CONFIG.gravity;
+            frictionSlider.value = CONFIG.friction;
+            segLenSlider.value = CONFIG.segmentLength;
+            ropeLenSlider.value = CONFIG.ropeLength;
+            stiffnessSlider.value = CONFIG.stiffness;
+            
+            gravityVal.textContent = CONFIG.gravity;
+            frictionVal.textContent = CONFIG.friction;
+            segLenVal.textContent = CONFIG.segmentLength;
+            ropeLenVal.textContent = CONFIG.ropeLength;
+            stiffnessVal.textContent = CONFIG.stiffness;
+            
+            initRope();
+        });
+
+        document.getElementById('windBtn').addEventListener('click', () => {
+            points.forEach((p, i) => {
+                if (!p.pinned) {
+                    p.oldx -= (Math.random() * 20 + 10);
+                }
+            });
+        });
+
+        document.getElementById('explodeBtn').addEventListener('click', () => {
+            points.forEach((p, i) => {
+                if (!p.pinned) {
+                    p.oldx += (Math.random() - 0.5) * 100;
+                    p.oldy += (Math.random() - 0.5) * 100;
+                }
+            });
+        });
+
+        function update() {
+            for (let i = 0; i < points.length; i++) {
+                let p = points[i];
+                
+                if (i === points.length - 1) {
+                    p.x = mouse.x;
+                    p.y = mouse.y;
+                } else {
+                    p.update();
+                }
+            }
+
+            for (let k = 0; k < CONFIG.stiffness; k++) {
+                for (let stick of sticks) {
+                    stick.update();
+                }
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            
+            for (let i = 1; i < points.length - 1; i++) {
+                const xc = (points[i].x + points[i + 1].x) / 2;
+                const yc = (points[i].y + points[i + 1].y) / 2;
+                ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+            }
+            
+            const last = points[points.length - 1];
+            ctx.lineTo(last.x, last.y);
+            
+            ctx.strokeStyle = CONFIG.ropeColor;
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            drawCircle(anchor.x, anchor.y, CONFIG.circleRadius, CONFIG.anchorColor);
+            drawCircle(mouse.x, mouse.y, CONFIG.circleRadius, CONFIG.mouseColor);
+        }
+
+        function drawCircle(x, y, r, color) {
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = color;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.beginPath();
+            ctx.arc(x - r*0.3, y - r*0.3, r/3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function animate() {
+            update();
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        mouse.x = width / 2;
+        mouse.y = height / 3;
+        
+        initRope();
+        animate();
+
+    </script>
+</body>
+</html>

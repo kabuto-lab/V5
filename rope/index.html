@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rope Physics</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div class="control-panel">
+        <div class="panel-header">
+            <h3>Physics Params</h3>
+            <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Gravity</span>
+                    <span id="gravityVal">0.6</span>
+                </div>
+                <input type="range" id="gravity" min="0" max="2" step="0.1" value="0.6">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Friction</span>
+                    <span id="frictionVal">0.96</span>
+                </div>
+                <input type="range" id="friction" min="0.8" max="1" step="0.01" value="0.96">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Segment Length</span>
+                    <span id="segLenVal">12</span>
+                </div>
+                <input type="range" id="segLen" min="5" max="30" step="1" value="12">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Rope Segments</span>
+                    <span id="ropeLenVal">40</span>
+                </div>
+                <input type="range" id="ropeLen" min="10" max="80" step="1" value="40">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Stiffness</span>
+                    <span id="stiffnessVal">5</span>
+                </div>
+                <input type="range" id="stiffness" min="1" max="20" step="1" value="5">
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="windBtn">Wind</button>
+            <button id="explodeBtn">Explode</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

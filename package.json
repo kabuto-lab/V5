@@ -1,0 +1,33 @@
+{
+  "name": "viru5-game",
+  "version": "4.0.1",
+  "private": true,
+  "description": "Complete Multiplayer Virus Battle Game",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "start": "cd server && npm start",
+    "test": "cd client && npm test"
+  },
+  "keywords": [
+    "game",
+    "multiplayer",
+    "virus",
+    "strategy",
+    "pixijs",
+    "colyseus"
+  ],
+  "author": "ViRU5 Development Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

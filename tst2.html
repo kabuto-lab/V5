@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VYRU5 Virus Follower</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f0f23;
+            font-family: 'Courier New', monospace;
+        }
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #00ff00;
+            font-size: 12px;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="info">VYRU5 VIRUS FOLLOWER // MOVE CURSOR</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const COLORS = {
+            pink: { main: 0xff0066, glow: '#ff0066', dark: '#800033' },
+            cyan: { main: 0x00ffff, glow: '#00ffff', dark: '#008080' },
+            purple: { main: 0xcc00ff, glow: '#cc00ff', dark: '#660080' },
+            orange: { main: 0xffaa00, glow: '#ffaa00', dark: '#805500' }
+        };
+
+        const config = {
+            segmentCount: 10,
+            spacing: 5,
+            smoothness: 0.29,
+            moveSpeed: 8,
+            headRadius: 12,
+            tailRadius: 4,
+            color: COLORS.cyan
+        };
+
+        let width, height;
+        const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        
+        const head = { x: mouse.x, y: mouse.y };
+        const segments = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function initSegments() {
+            segments.length = 0;
+            for (let i = 0; i < config.segmentCount; i++) {
+                segments.push({
+                    x: head.x - (i * config.spacing),
+                    y: head.y
+                });
+            }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('resize', resize);
+
+        function follow(current, target) {
+            const dx = target.x - current.x;
+            const dy = target.y - current.y;
+            const angle = Math.atan2(dy, dx);
+            
+            const targetX = target.x - Math.cos(angle) * config.spacing;
+            const targetY = target.y - Math.sin(angle) * config.spacing;
+
+            current.x += (targetX - current.x) * config.smoothness;
+            current.y += (targetY - current.y) * config.smoothness;
+        }
+
+        function hexToRgb(hex) {
+            const r = (hex >> 16) & 255;
+            const g = (hex >> 8) & 255;
+            const b = hex & 255;
+            return { r, g, b };
+        }
+
+        function update() {
+            const followSpeed = config.moveSpeed * 0.015;
+            head.x += (mouse.x - head.x) * followSpeed;
+            head.y += (mouse.y - head.y) * followSpeed;
+
+            if (segments.length > 0) {
+                follow(segments[0], head);
+                for (let i = 1; i < segments.length; i++) {
+                    follow(segments[i], segments[i-1]);
+                }
+            }
+        }
+
+        function draw() {
+            // SOLID BACKGROUND - no trail effect
+            ctx.fillStyle = '#0f0f23';
+            ctx.fillRect(0, 0, width, height);
+
+            const color = config.color;
+            const rgb = hexToRgb(color.main);
+
+            if (segments.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(head.x, head.y);
+                for (let i = 0; i < segments.length; i++) {
+                    ctx.lineTo(segments[i].x, segments[i].y);
+                }
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = config.tailRadius * 2.5;
+                ctx.strokeStyle = color.dark;
+                ctx.globalAlpha = 0.6;
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+
+            for (let i = 0; i < segments.length; i++) {
+                const s = segments[i];
+                const progress = i / segments.length;
+                const r = config.headRadius - (progress * (config.headRadius - config.tailRadius));
+                
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, Math.max(2, r), 0, Math.PI * 2);
+                
+                const alpha = 1 - (progress * 0.6);
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+                ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.arc(head.x, head.y, config.headRadius, 0, Math.PI * 2);
+            ctx.fillStyle = color.glow;
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = color.glow;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            ctx.beginPath();
+            ctx.arc(head.x, head.y, config.headRadius * 0.4, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        resize();
+        initSegments();
+        loop();
+    </script>
+</body>
+</html>
