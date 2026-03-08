@@ -3,141 +3,636 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ViRU5 V5 - Архитектура</title>
+  <title>ViRU5 V5 - ARCHITECTURE</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+    
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --cp-yellow: #fcee0a;
+      --cp-red: #ff003c;
+      --cp-cyan: #00f0ff;
+      --cp-blue: #0044ff;
+      --cp-dark: #0a0a0f;
+      --cp-darker: #050508;
+      --cp-gray: #1a1a2e;
+    }
+    
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
-      color: #00ff00;
-      width: 100vw; height: 100vh; overflow: hidden;
+      font-family: 'Rajdhani', sans-serif;
+      background: 
+        radial-gradient(ellipse at 20% 50%, rgba(255, 0, 60, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 50%, rgba(0, 240, 255, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, var(--cp-darker) 0%, var(--cp-dark) 50%, var(--cp-gray) 100%);
+      color: var(--cp-yellow);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      cursor: crosshair;
     }
+    
+    /* Scanline effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15) 0px,
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+    
+    /* Glitch header */
     .header {
-      position: fixed; top: 15px; left: 20px; z-index: 10000;
-      display: flex; align-items: center; gap: 15px;
-      background: rgba(15, 15, 35, 0.7); backdrop-filter: blur(10px);
-      padding: 10px 20px; border-radius: 30px;
-      border: 1px solid rgba(0, 255, 255, 0.3);
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: linear-gradient(90deg, rgba(255, 238, 0, 0.1), rgba(0, 0, 0, 0.8));
+      padding: 15px 30px;
+      clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+      border-left: 3px solid var(--cp-yellow);
+      box-shadow: 0 0 30px rgba(252, 238, 10, 0.3);
     }
-    .header h1 { font-size: 1rem; color: #00ffff; text-shadow: 0 0 10px rgba(0, 255, 255, 0.5); white-space: nowrap; }
-    .header p { font-size: 0.65rem; opacity: 0.6; color: #ff00ff; }
-    .tab-circles { display: flex; gap: 8px; }
+    
+    .header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--cp-yellow);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      text-shadow: 0 0 10px var(--cp-yellow);
+      position: relative;
+    }
+    
+    .header h1::before {
+      content: attr(data-text);
+      position: absolute;
+      left: 2px;
+      top: 0;
+      color: var(--cp-red);
+      opacity: 0.5;
+      animation: glitch 2s infinite;
+    }
+    
+    @keyframes glitch {
+      0%, 100% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(-2px, -2px); }
+      60% { transform: translate(2px, 2px); }
+      80% { transform: translate(2px, -2px); }
+    }
+    
+    .header p {
+      font-size: 0.7rem;
+      color: var(--cp-cyan);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.8;
+      border-top: 1px solid var(--cp-cyan);
+      padding-top: 5px;
+    }
+    
+    /* Cyber circles */
+    .tab-circles {
+      display: flex;
+      gap: 10px;
+    }
+    
     .tab-circle {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(0, 255, 255, 0.1); border: 2px solid rgba(0, 255, 255, 0.3);
-      cursor: pointer; transition: all 0.3s;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; color: #00ffff;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid var(--cp-cyan);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: var(--cp-cyan);
+      position: relative;
+      overflow: hidden;
     }
-    .tab-circle:hover { background: rgba(0, 255, 255, 0.2); border-color: #00ffff; transform: scale(1.1); }
-    .tab-circle.active { background: rgba(0, 255, 255, 0.3); border-color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); }
+    
+    .tab-circle::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(0, 240, 255, 0.2), transparent);
+      transform: rotate(45deg);
+      transition: all 0.5s;
+      opacity: 0;
+    }
+    
+    .tab-circle:hover::before {
+      opacity: 1;
+      left: 100%;
+    }
+    
+    .tab-circle:hover {
+      border-color: var(--cp-yellow);
+      color: var(--cp-yellow);
+      box-shadow: 0 0 20px rgba(252, 238, 10, 0.5);
+      transform: scale(1.1);
+    }
+    
+    .tab-circle.active {
+      background: rgba(252, 238, 10, 0.2);
+      border-color: var(--cp-yellow);
+      color: var(--cp-yellow);
+      box-shadow: 0 0 30px rgba(252, 238, 10, 0.6), inset 0 0 20px rgba(252, 238, 10, 0.2);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 30px rgba(252, 238, 10, 0.6); }
+      50% { box-shadow: 0 0 50px rgba(252, 238, 10, 0.8); }
+    }
+    
     .tab-title-display {
-      font-size: 0.85rem; color: #00ffff; opacity: 0.8;
-      min-width: 150px; border-left: 1px solid rgba(0, 255, 255, 0.3); padding-left: 15px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      color: var(--cp-cyan);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      min-width: 180px;
+      border-left: 2px solid var(--cp-cyan);
+      padding-left: 20px;
+      text-shadow: 0 0 10px var(--cp-cyan);
     }
-    .container { width: 100vw; height: 100vh; padding: 0; overflow: hidden; }
-    .section { background: transparent; border: none; padding: 0; margin: 0; width: 100%; height: 100%; }
-    .tab-content { display: none; width: 100%; height: 100%; }
-    .tab-content.active { display: block; }
-    .diagram-container { position: relative; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.2); overflow: auto; }
+    
+    /* Main container */
+    .container {
+      width: 100vw;
+      height: 100vh;
+      padding: 0;
+      overflow: hidden;
+    }
+    
+    .tab-content {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Diagram container */
+    .diagram-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      overflow: auto;
+    }
+    
+    /* Cyber nodes */
     .node {
-      position: absolute; background: rgba(26, 26, 62, 0.9); border: 2px solid; border-radius: 6px;
-      padding: 8px; min-width: 140px; max-width: 200px; cursor: move;
-      transition: transform 0.2s, box-shadow 0.2s; z-index: 10;
+      position: absolute;
+      background: linear-gradient(135deg, rgba(10, 10, 15, 0.95), rgba(26, 26, 46, 0.95));
+      border: 2px solid;
+      border-radius: 0;
+      padding: 12px;
+      min-width: 160px;
+      max-width: 220px;
+      cursor: move;
+      transition: all 0.3s;
+      z-index: 10;
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
     }
-    .node:hover { transform: scale(1.03); box-shadow: 0 0 20px currentColor; z-index: 100; }
-    .node-core { border-color: #ff0066; color: #ff0066; }
-    .node-feature { border-color: #00ffff; color: #00ffff; }
-    .node-ui { border-color: #00ff00; color: #00ff00; }
-    .node-server { border-color: #ffaa00; color: #ffaa00; }
-    .node-data { border-color: #cc00ff; color: #cc00ff; }
-    .node-title { font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; text-align: center; }
-    .node-description { font-size: 0.7rem; opacity: 0.7; line-height: 1.3; }
+    
+    .node::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: currentColor;
+      opacity: 0.5;
+    }
+    
+    .node:hover {
+      transform: scale(1.05) translateZ(0);
+      box-shadow: 0 0 30px currentColor;
+      z-index: 100;
+    }
+    
+    .node-core { border-color: var(--cp-red); color: var(--cp-red); }
+    .node-feature { border-color: var(--cp-cyan); color: var(--cp-cyan); }
+    .node-ui { border-color: var(--cp-yellow); color: var(--cp-yellow); }
+    .node-server { border-color: var(--cp-blue); color: var(--cp-blue); }
+    .node-data { border-color: #ff00ff; color: #ff00ff; }
+    
+    .node-title {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .node-description {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      line-height: 1.4;
+      text-align: center;
+    }
+    
     .node-methods {
-      margin-top: 6px; font-size: 0.65rem; background: rgba(0, 0, 0, 0.2);
-      padding: 5px; border-radius: 3px; display: none;
+      margin-top: 10px;
+      font-size: 0.7rem;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 8px;
+      border-left: 2px solid currentColor;
+      display: none;
     }
-    .node:hover .node-methods { display: block; }
-    .node-methods h4 { margin-bottom: 3px; font-size: 0.65rem; opacity: 0.8; }
-    .node-methods ul { list-style: none; padding-left: 3px; }
-    .node-methods li { padding: 1px 0; }
-    .node-methods li::before { content: "▸ "; color: currentColor; }
-    .connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-    .connection { position: absolute; height: 2px; background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.6), transparent); transform-origin: left center; }
+    
+    .node:hover .node-methods {
+      display: block;
+    }
+    
+    .node-methods h4 {
+      margin-bottom: 5px;
+      font-size: 0.7rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+    }
+    
+    .node-methods ul {
+      list-style: none;
+      padding-left: 5px;
+    }
+    
+    .node-methods li {
+      padding: 2px 0;
+    }
+    
+    .node-methods li::before {
+      content: "► ";
+      color: currentColor;
+    }
+    
+    /* Connections */
+    .connections {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .connection {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cp-cyan), transparent);
+      transform-origin: left center;
+      box-shadow: 0 0 10px var(--cp-cyan);
+    }
+    
+    /* Legend */
     .legend {
-      position: fixed; bottom: 15px; left: 15px; z-index: 1000;
-      display: flex; flex-wrap: wrap; gap: 10px; padding: 10px;
-      background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);
-      border-radius: 8px; border: 1px solid rgba(0, 255, 255, 0.3);
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--cp-cyan);
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
+      z-index: 1000;
     }
-    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; }
-    .legend-color { width: 16px; height: 16px; border-radius: 3px; border: 2px solid; }
-    .flow-container { display: flex; flex-direction: column; gap: 20px; padding: 80px 20px 20px; width: 100%; height: 100%; overflow: auto; }
-    .flow-row { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border: 2px solid;
+      transform: rotate(45deg);
+    }
+    
+    /* Flow */
+    .flow-container {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      padding: 100px 40px 40px;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+    }
+    
+    .flow-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    
     .flow-box {
-      background: rgba(26, 26, 62, 0.9); border: 1px solid #00ffff; border-radius: 5px;
-      padding: 12px 20px; min-width: 160px; text-align: center; position: relative; font-size: 0.75rem;
+      background: linear-gradient(135deg, rgba(10, 10, 15, 0.9), rgba(26, 26, 46, 0.9));
+      border: 2px solid var(--cp-cyan);
+      padding: 15px 25px;
+      min-width: 200px;
+      text-align: center;
+      position: relative;
+      font-size: 0.8rem;
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
     }
+    
     .flow-box::after {
-      content: "↓"; position: absolute; bottom: -22px; left: 50%;
-      transform: translateX(-50%); font-size: 1.4rem; color: #ff00ff; animation: pulse 1s infinite;
+      content: "▼";
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5rem;
+      color: var(--cp-red);
+      animation: pulse 1s infinite;
     }
-    .flow-row:last-child .flow-box::after { display: none; }
-    .flow-box strong { display: block; margin-bottom: 5px; color: #00ffff; font-size: 0.8rem; }
-    .flow-box small { display: block; opacity: 0.6; margin-bottom: 5px; }
-    .flow-box code { display: block; background: rgba(0, 0, 0, 0.3); padding: 4px 8px; border-radius: 3px; font-size: 0.65rem; }
-    @keyframes pulse { 0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); } 50% { opacity: 0.5; transform: translateX(-50%) scale(1.2); } }
+    
+    .flow-row:last-child .flow-box::after {
+      display: none;
+    }
+    
+    .flow-box strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--cp-cyan);
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .flow-box small {
+      display: block;
+      opacity: 0.6;
+      margin-bottom: 8px;
+    }
+    
+    .flow-box code {
+      display: block;
+      background: rgba(0, 240, 255, 0.1);
+      padding: 5px 10px;
+      border-left: 2px solid var(--cp-cyan);
+      font-size: 0.7rem;
+    }
+    
+    /* Tree */
     .tree-container {
-      padding: 80px 40px 20px; width: 100%; height: 100%; overflow: auto;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+      padding: 100px 60px 40px;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
     }
-    .tree { list-style: none; padding-left: 20px; font-size: 0.8rem; }
-    .tree h3 { color: #00ff00; margin-bottom: 15px; font-size: 1rem; }
-    .tree ul { list-style: none; padding-left: 25px; border-left: 1px dashed rgba(0, 255, 255, 0.3); }
-    .tree li { position: relative; padding: 5px 0; }
-    .tree li::before { content: "├─"; position: absolute; left: -20px; color: rgba(0, 255, 255, 0.5); }
-    .tree li:last-child::before { content: "└─"; }
+    
+    .tree {
+      list-style: none;
+      padding-left: 20px;
+      font-size: 0.85rem;
+    }
+    
+    .tree h3 {
+      color: var(--cp-yellow);
+      margin-bottom: 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-bottom: 2px solid var(--cp-yellow);
+      padding-bottom: 10px;
+    }
+    
+    .tree ul {
+      list-style: none;
+      padding-left: 25px;
+      border-left: 1px dashed var(--cp-cyan);
+    }
+    
+    .tree li {
+      position: relative;
+      padding: 8px 0;
+    }
+    
+    .tree li::before {
+      content: "├─";
+      position: absolute;
+      left: -20px;
+      color: var(--cp-cyan);
+    }
+    
+    .tree li:last-child::before {
+      content: "└─";
+    }
+    
     .tree-item {
-      display: inline-block; background: rgba(0, 255, 255, 0.05);
-      padding: 4px 10px; border-radius: 3px; border-left: 2px solid #00ffff; font-size: 0.75rem;
+      display: inline-block;
+      background: rgba(0, 240, 255, 0.05);
+      padding: 5px 12px;
+      border-left: 3px solid var(--cp-cyan);
+      font-size: 0.8rem;
+      font-family: 'Orbitron', sans-serif;
     }
-    .tree-item.server { border-color: #ffaa00; background: rgba(255, 170, 0, 0.05); }
-    .tree-item.client { border-color: #00ff00; background: rgba(0, 255, 0, 0.05); }
-    .stats-container { padding: 80px 40px 20px; width: 100%; height: 100%; overflow: auto; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
-    .stat-card { background: rgba(26, 26, 62, 0.8); border: 1px solid #ff00ff; border-radius: 8px; padding: 20px; text-align: center; }
-    .stat-number { font-size: 2rem; font-weight: bold; color: #00ffff; }
-    .stat-label { font-size: 0.75rem; opacity: 0.7; margin-top: 8px; }
-    .stats-container h3 { color: #00ffff; margin-top: 30px; font-size: 1.1rem; }
-    .stats-container pre { background: rgba(0, 0, 0, 0.5); padding: 20px; border-radius: 8px; overflow-x: auto; color: #00ff00; font-size: 0.75rem; margin-top: 15px; }
-    .zoom-controls { position: fixed; bottom: 15px; right: 15px; display: flex; gap: 8px; z-index: 1000; }
+    
+    .tree-item.server {
+      border-color: var(--cp-blue);
+      background: rgba(0, 68, 255, 0.05);
+    }
+    
+    .tree-item.client {
+      border-color: var(--cp-yellow);
+      background: rgba(252, 238, 10, 0.05);
+    }
+    
+    /* Stats */
+    .stats-container {
+      padding: 100px 60px 40px;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, rgba(10, 10, 15, 0.9), rgba(26, 26, 46, 0.9));
+      border: 2px solid var(--cp-red);
+      padding: 25px;
+      text-align: center;
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
+    }
+    
+    .stat-number {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--cp-cyan);
+      text-shadow: 0 0 20px var(--cp-cyan);
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .stats-container h3 {
+      color: var(--cp-cyan);
+      margin-top: 40px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+    
+    .stats-container pre {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 25px;
+      border-left: 3px solid var(--cp-yellow);
+      overflow-x: auto;
+      color: var(--cp-yellow);
+      font-size: 0.8rem;
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+    }
+    
+    /* Zoom controls */
+    .zoom-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+    }
+    
     .zoom-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255, 0, 255, 0.8); color: #0f0f23; border: none;
-      font-size: 1.3rem; cursor: pointer; box-shadow: 0 2px 10px rgba(255, 0, 255, 0.5);
-      transition: transform 0.2s; display: flex; align-items: center; justify-content: center;
+      width: 45px;
+      height: 45px;
+      background: rgba(252, 238, 10, 0.2);
+      color: var(--cp-yellow);
+      border: 2px solid var(--cp-yellow);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Orbitron', sans-serif;
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
     }
-    .zoom-btn:hover { transform: scale(1.15); background: rgba(255, 0, 255, 1); }
+    
+    .zoom-btn:hover {
+      background: rgba(252, 238, 10, 0.4);
+      box-shadow: 0 0 30px rgba(252, 238, 10, 0.6);
+      transform: scale(1.1);
+    }
+    
+    /* Tooltip */
     .tooltip {
-      position: fixed; background: rgba(0, 0, 0, 0.95); border: 1px solid #00ffff;
-      border-radius: 5px; padding: 10px; max-width: 300px; z-index: 10000;
-      pointer-events: none; display: none; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); font-size: 0.75rem;
+      position: fixed;
+      background: rgba(0, 0, 0, 0.95);
+      border: 2px solid var(--cp-cyan);
+      padding: 15px;
+      max-width: 350px;
+      z-index: 10000;
+      pointer-events: none;
+      display: none;
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+      font-size: 0.8rem;
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
     }
-    .tooltip h4 { color: #00ffff; margin-bottom: 8px; font-size: 0.8rem; }
-    .tooltip p { font-size: 0.75rem; line-height: 1.4; opacity: 0.8; }
+    
+    .tooltip h4 {
+      color: var(--cp-cyan);
+      margin-bottom: 10px;
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .tooltip p {
+      line-height: 1.5;
+      opacity: 0.8;
+    }
+    
+    /* Corner decorations */
+    .corner {
+      position: fixed;
+      width: 100px;
+      height: 100px;
+      border: 2px solid var(--cp-cyan);
+      pointer-events: none;
+      z-index: 9998;
+    }
+    
+    .corner-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+    .corner-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+    .corner-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+    .corner-br { bottom: 0; right: 0; border-left: none; border-top: none; }
   </style>
 </head>
 <body>
   <div class="header">
-    <div><h1>🦠 ViRU5 V5 - Архитектура</h1><p>Architecture</p></div>
-    <div class="tab-circles">
-      <div class="tab-circle active" data-tab="diagram" title="Node Diagram">📊</div>
-      <div class="tab-circle" data-tab="flow" title="Data Flow">🔄</div>
-      <div class="tab-circle" data-tab="dependency" title="Dependencies">🌳</div>
-      <div class="tab-circle" data-tab="stats" title="Statistics">📈</div>
+    <div>
+      <h1 data-text="ViRU5 V5">ViRU5 V5</h1>
+      <p>System Architecture // NETRUNNER INTERFACE</p>
     </div>
-    <div class="tab-title-display" id="tabTitleDisplay">Node Diagram</div>
+    <div class="tab-circles">
+      <div class="tab-circle active" data-tab="diagram" title="NODE MAP">📊</div>
+      <div class="tab-circle" data-tab="flow" title="DATA FLOW">🔄</div>
+      <div class="tab-circle" data-tab="dependency" title="NET LINKS">🌳</div>
+      <div class="tab-circle" data-tab="stats" title="SYSTEM STATS">📈</div>
+    </div>
+    <div class="tab-title-display" id="tabTitleDisplay">NODE MAP</div>
   </div>
+  
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
 
   <div class="container">
     <!-- Tab 1: Node Diagram -->
@@ -145,86 +640,86 @@
       <div class="section">
         <div class="diagram-container" id="nodeDiagram">
           <svg class="connections" id="connections"></svg>
-          <div class="node node-core" style="top: 50px; left: 50px;" data-tooltip="main">
-            <div class="node-title">🎯 MainApp</div>
-            <div class="node-description">Точка входа<br>Entry Point</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>constructor()</li><li>setupInteractions()</li><li>enterSandboxMode()</li></ul></div>
+          <div class="node node-core" style="top: 80px; left: 80px;" data-tooltip="main">
+            <div class="node-title">🎯 MAIN_APP</div>
+            <div class="node-description">ENTRY POINT<br>CORE SYSTEM</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>constructor()</li><li>setupInteractions()</li><li>enterSandbox()</li></ul></div>
           </div>
-          <div class="node node-core" style="top: 50px; left: 300px;" data-tooltip="gameEngine">
-            <div class="node-title">⚙️ GameEngine</div>
-            <div class="node-description">PixiJS</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>init()</li><li>start()</li><li>resize()</li></ul></div>
+          <div class="node node-core" style="top: 80px; left: 350px;" data-tooltip="gameEngine">
+            <div class="node-title">⚙️ GAME_ENGINE</div>
+            <div class="node-description">PIXI JS CORE<br>RENDERER</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>init()</li><li>start()</li><li>resize()</li></ul></div>
           </div>
-          <div class="node node-core" style="top: 50px; left: 550px;" data-tooltip="network">
-            <div class="node-title">🌐 Network</div>
-            <div class="node-description">Сеть</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>connect()</li><li>joinRoom()</li><li>send()</li></ul></div>
+          <div class="node node-core" style="top: 80px; left: 620px;" data-tooltip="network">
+            <div class="node-title">🌐 NETWORK</div>
+            <div class="node-description">COLYSEUS LINK<br>MULTIPLAYER</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>connect()</li><li>joinRoom()</li><li>send()</li></ul></div>
           </div>
-          <div class="node node-core" style="top: 50px; left: 800px;" data-tooltip="input">
-            <div class="node-title">🖱️ Input</div>
-            <div class="node-description">Ввод</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>onMouse</li><li>onKey</li></ul></div>
+          <div class="node node-core" style="top: 80px; left: 890px;" data-tooltip="input">
+            <div class="node-title">🖱️ INPUT_MGR</div>
+            <div class="node-description">MOUSE / KB<br>INPUT HANDLER</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>onMouse</li><li>onKey</li></ul></div>
           </div>
-          <div class="node node-feature" style="top: 250px; left: 50px;" data-tooltip="battleManager">
-            <div class="node-title">⚔️ BattleMgr</div>
-            <div class="node-description">Логика</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>startBattle()</li><li>spreadTick()</li><li>checkWin()</li></ul></div>
+          <div class="node node-feature" style="top: 300px; left: 80px;" data-tooltip="battleManager">
+            <div class="node-title">⚔️ BATTLE_MGR</div>
+            <div class="node-description">COMBAT LOGIC<br>SIMULATION</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>startBattle()</li><li>spreadTick()</li><li>checkWin()</li></ul></div>
           </div>
-          <div class="node node-feature" style="top: 250px; left: 300px;" data-tooltip="battleRenderer">
-            <div class="node-title">🎨 Renderer</div>
-            <div class="node-description">Визуал</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>initGrid()</li><li>updateGrid()</li></ul></div>
+          <div class="node node-feature" style="top: 300px; left: 350px;" data-tooltip="battleRenderer">
+            <div class="node-title">🎨 RENDERER</div>
+            <div class="node-description">VISUALIZATION<br>WEBGL DRAW</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>initGrid()</li><li>updateGrid()</li></ul></div>
           </div>
-          <div class="node node-feature" style="top: 250px; left: 550px;" data-tooltip="virusTube">
-            <div class="node-title">🧬 VirusTube</div>
-            <div class="node-description">UI</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>addPoint()</li><li>randomize()</li></ul></div>
+          <div class="node node-feature" style="top: 300px; left: 620px;" data-tooltip="virusTube">
+            <div class="node-title">🧬 VIRUS_TUBE</div>
+            <div class="node-description">PARAM UI<br>12 POINTS</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>addPoint()</li><li>randomize()</li></ul></div>
           </div>
-          <div class="node node-feature" style="top: 250px; left: 800px;" data-tooltip="mouseFollower">
-            <div class="node-title">👆 Mouse</div>
-            <div class="node-description">Курсор</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>updatePos()</li></ul></div>
+          <div class="node node-feature" style="top: 300px; left: 890px;" data-tooltip="mouseFollower">
+            <div class="node-title">👆 MOUSE_FLW</div>
+            <div class="node-description">CURSOR TRACK<br>FOLLOWER</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>updatePos()</li></ul></div>
           </div>
-          <div class="node node-ui" style="top: 450px; left: 175px;" data-tooltip="uiController">
-            <div class="node-title">🖼️ UI Ctrl</div>
-            <div class="node-description">Экраны</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>setView()</li><li>show()</li></ul></div>
+          <div class="node node-ui" style="top: 520px; left: 215px;" data-tooltip="uiController">
+            <div class="node-title">🖼️ UI_CTRL</div>
+            <div class="node-description">SCREEN MGR<br>VIEW SWITCH</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>setView()</li><li>show()</li></ul></div>
           </div>
-          <div class="node node-ui" style="top: 450px; left: 425px;" data-tooltip="chat">
-            <div class="node-title">💬 Chat</div>
-            <div class="node-description">Чат</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>send()</li><li>recv()</li></ul></div>
+          <div class="node node-ui" style="top: 520px; left: 485px;" data-tooltip="chat">
+            <div class="node-title">💬 CHAT_SYS</div>
+            <div class="node-description">MSG SYSTEM<br>NETWORK CHAT</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>send()</li><li>recv()</li></ul></div>
           </div>
-          <div class="node node-server" style="top: 50px; left: 1050px;" data-tooltip="server">
-            <div class="node-title">🖥️ Server</div>
-            <div class="node-description">Сервер</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>Express</li><li>Colyseus</li></ul></div>
+          <div class="node node-server" style="top: 80px; left: 1160px;" data-tooltip="server">
+            <div class="node-title">🖥️ SERVER</div>
+            <div class="node-description">NODE JS<br>EXPRESS + COLYSEUS</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>Express</li><li>Colyseus</li><li>WS</li></ul></div>
           </div>
-          <div class="node node-server" style="top: 250px; left: 1050px;" data-tooltip="battleRoom">
-            <div class="node-title">🏠 Room</div>
-            <div class="node-description">Комната</div>
-            <div class="node-methods"><h4>Методы:</h4><ul><li>onCreate()</li><li>onJoin()</li></ul></div>
+          <div class="node node-server" style="top: 300px; left: 1160px;" data-tooltip="battleRoom">
+            <div class="node-title">🏠 BATTLE_ROOM</div>
+            <div class="node-description">GAME ROOM<br>STATE SYNC</div>
+            <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>onCreate()</li><li>onJoin()</li><li>onLeave()</li></ul></div>
           </div>
-          <div class="node node-server" style="top: 450px; left: 1050px;" data-tooltip="schema">
-            <div class="node-title">📋 Schema</div>
-            <div class="node-description">Схема</div>
-            <div class="node-methods"><h4>Поля:</h4><ul><li>players</li><li>grid</li></ul></div>
+          <div class="node node-server" style="top: 520px; left: 1160px;" data-tooltip="schema">
+            <div class="node-title">📋 SCHEMA</div>
+            <div class="node-description">STATE DEF<br>DATA STRUCT</div>
+            <div class="node-methods"><h4>FIELDS</h4><ul><li>players</li><li>grid</li><li>tick</li></ul></div>
           </div>
-          <div class="node node-data" style="top: 650px; left: 175px;" data-tooltip="gridConfig">
-            <div class="node-title">📐 Grid</div>
-            <div class="node-description">64×40=2560</div>
+          <div class="node node-data" style="top: 740px; left: 215px;" data-tooltip="gridConfig">
+            <div class="node-title">📐 GRID_CFG</div>
+            <div class="node-description">64 × 40<br>2560 CELLS</div>
           </div>
-          <div class="node node-data" style="top: 650px; left: 425px;" data-tooltip="types">
-            <div class="node-title">🧬 Types</div>
-            <div class="node-description">Данные</div>
+          <div class="node node-data" style="top: 740px; left: 485px;" data-tooltip="types">
+            <div class="node-title">🧬 TYPES</div>
+            <div class="node-description">TS INTERFACES<br>DATA TYPES</div>
           </div>
         </div>
         <div class="legend">
-          <div class="legend-item"><div class="legend-color" style="border-color:#ff0066;background:rgba(255,0,102,0.2)"></div><span>Core</span></div>
-          <div class="legend-item"><div class="legend-color" style="border-color:#00ffff;background:rgba(0,255,255,0.2)"></div><span>Features</span></div>
-          <div class="legend-item"><div class="legend-color" style="border-color:#00ff00;background:rgba(0,255,0,0.2)"></div><span>UI</span></div>
-          <div class="legend-item"><div class="legend-color" style="border-color:#ffaa00;background:rgba(255,170,0,0.2)"></div><span>Server</span></div>
-          <div class="legend-item"><div class="legend-color" style="border-color:#cc00ff;background:rgba(200,0,255,0.2)"></div><span>Data</span></div>
+          <div class="legend-item"><div class="legend-color" style="border-color:var(--cp-red)"></div><span>CORE</span></div>
+          <div class="legend-item"><div class="legend-color" style="border-color:var(--cp-cyan)"></div><span>FEATURES</span></div>
+          <div class="legend-item"><div class="legend-color" style="border-color:var(--cp-yellow)"></div><span>UI</span></div>
+          <div class="legend-item"><div class="legend-color" style="border-color:var(--cp-blue)"></div><span>SERVER</span></div>
+          <div class="legend-item"><div class="legend-color" style="border-color:#ff00ff"></div><span>DATA</span></div>
         </div>
       </div>
     </div>
@@ -233,12 +728,12 @@
     <div id="flow" class="tab-content">
       <div class="section">
         <div class="flow-container">
-          <div class="flow-row"><div class="flow-box"><strong>Игрок настраивает вирусы</strong><small>Player configures</small><code>VirusTubeManager</code></div></div>
-          <div class="flow-row"><div class="flow-box"><strong>НАЧАТЬ БИТВУ</strong><small>Click START</small><code>Button Event</code></div></div>
-          <div class="flow-row"><div class="flow-box"><strong>BattleManager.startBattle()</strong><small>Create grid</small><code>64×40=2560</code></div></div>
-          <div class="flow-row"><div class="flow-box"><strong>spreadTick() 500ms</strong><small>Every 500ms</small><code>Spread logic</code></div></div>
-          <div class="flow-row"><div class="flow-box"><strong>Renderer.updateGrid()</strong><small>Render</small><code>PixiJS</code></div></div>
-          <div class="flow-row"><div class="flow-box"><strong>Victory Check</strong><small>96% territory</small><code>checkWin()</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>CONFIGURE VIRUSES</strong><small>Player Input</small><code>VirusTubeManager</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>INITIATE COMBAT</strong><small>START BATTLE</small><code>Button Event</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>BATTLE_MGR.START()</strong><small>Grid 64×40</small><code>2560 cells</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>SPREAD_TICK()</strong><small>500ms Interval</small><code>Simulation Loop</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>RENDERER.UPDATE()</strong><small>PixiJS Draw</small><code>WebGL</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>VICTORY_CHECK</strong><small>96% Control</small><code>Win Condition</code></div></div>
         </div>
       </div>
     </div>
@@ -248,39 +743,39 @@
       <div class="section">
         <div class="tree-container">
           <div class="tree">
-            <h3>📦 Client Dependencies</h3>
+            <h3>📦 CLIENT_DEPS</h3>
             <ul>
-              <li><span class="tree-item client">main.ts</span>
+              <li><span class="tree-item client">MAIN_TS</span>
                 <ul>
-                  <li><span class="tree-item client">GameEngine.ts</span></li>
-                  <li><span class="tree-item client">NetworkManager.ts</span>
-                    <ul><li><span class="tree-item client">colyseus.js</span></li></ul>
+                  <li><span class="tree-item client">GAME_ENGINE_TS</span></li>
+                  <li><span class="tree-item client">NETWORK_MGR_TS</span>
+                    <ul><li><span class="tree-item client">COLYSEUS_JS</span></li></ul>
                   </li>
-                  <li><span class="tree-item client">InputManager.ts</span></li>
-                  <li><span class="tree-item client">UIController.ts</span></li>
-                  <li><span class="tree-item client">BattleManager.ts</span>
-                    <ul><li><span class="tree-item client">GridConfig.ts</span></li></ul>
+                  <li><span class="tree-item client">INPUT_MGR_TS</span></li>
+                  <li><span class="tree-item client">UI_CTRL_TS</span></li>
+                  <li><span class="tree-item client">BATTLE_MGR_TS</span>
+                    <ul><li><span class="tree-item client">GRID_CFG_TS</span></li></ul>
                   </li>
-                  <li><span class="tree-item client">BattleRenderer.ts</span>
-                    <ul><li><span class="tree-item client">pixi.js</span></li></ul>
+                  <li><span class="tree-item client">BATTLE_RENDERER_TS</span>
+                    <ul><li><span class="tree-item client">PIXI_JS</span></li></ul>
                   </li>
-                  <li><span class="tree-item client">VirusTubeManager.ts</span></li>
+                  <li><span class="tree-item client">VIRUS_TUBE_TS</span></li>
                 </ul>
               </li>
             </ul>
           </div>
           <div class="tree">
-            <h3>🖥️ Server Dependencies</h3>
+            <h3>🖥️ SERVER_DEPS</h3>
             <ul>
-              <li><span class="tree-item server">index.ts</span>
+              <li><span class="tree-item server">INDEX_TS</span>
                 <ul>
-                  <li><span class="tree-item server">express</span></li>
-                  <li><span class="tree-item server">colyseus</span></li>
-                  <li><span class="tree-item server">cors</span></li>
+                  <li><span class="tree-item server">EXPRESS</span></li>
+                  <li><span class="tree-item server">COLYSEUS</span></li>
+                  <li><span class="tree-item server">CORS</span></li>
                 </ul>
               </li>
-              <li><span class="tree-item server">BattleRoom.ts</span>
-                <ul><li><span class="tree-item server">schema.ts</span></li></ul>
+              <li><span class="tree-item server">BATTLE_ROOM_TS</span>
+                <ul><li><span class="tree-item server">SCHEMA_TS</span></li></ul>
               </li>
             </ul>
           </div>
@@ -293,35 +788,35 @@
       <div class="section">
         <div class="stats-container">
           <div class="stats-grid">
-            <div class="stat-card"><div class="stat-number">10</div><div class="stat-label">Core Files</div></div>
-            <div class="stat-card"><div class="stat-number">64×40</div><div class="stat-label">Grid Size</div></div>
-            <div class="stat-card"><div class="stat-number">2560</div><div class="stat-label">Total Cells</div></div>
-            <div class="stat-card"><div class="stat-number">12</div><div class="stat-label">Virus Params</div></div>
-            <div class="stat-card"><div class="stat-number">500ms</div><div class="stat-label">Tick Rate</div></div>
-            <div class="stat-card"><div class="stat-number">60</div><div class="stat-label">FPS</div></div>
-            <div class="stat-card"><div class="stat-number">4</div><div class="stat-label">Virus Modes</div></div>
-            <div class="stat-card"><div class="stat-number">96%</div><div class="stat-label">Victory</div></div>
+            <div class="stat-card"><div class="stat-number">10</div><div class="stat-label">CORE MODULES</div></div>
+            <div class="stat-card"><div class="stat-number">64×40</div><div class="stat-label">GRID MATRIX</div></div>
+            <div class="stat-card"><div class="stat-number">2560</div><div class="stat-label">TOTAL CELLS</div></div>
+            <div class="stat-card"><div class="stat-number">12</div><div class="stat-label">VIRUS PARAMS</div></div>
+            <div class="stat-card"><div class="stat-number">500MS</div><div class="stat-label">TICK CYCLE</div></div>
+            <div class="stat-card"><div class="stat-number">60</div><div class="stat-label">TARGET FPS</div></div>
+            <div class="stat-card"><div class="stat-number">4</div><div class="stat-label">VIRUS MODES</div></div>
+            <div class="stat-card"><div class="stat-number">96%</div><div class="stat-label">WIN THRESHOLD</div></div>
           </div>
-          <h3>📁 File Structure</h3>
-          <pre>V5/
-├── client/
-│   └── src/
-│       ├── main.ts              # Entry point
-│       ├── core/
-│       │   ├── GameEngine.ts    # PixiJS
-│       │   ├── NetworkManager.ts# Colyseus
-│       │   └── InputManager.ts  # Input
-│       ├── features/battle/
-│       │   ├── BattleManager.ts # Logic
-│       │   ├── BattleRenderer.ts# Render
-│       │   └── VirusTubeManager.ts # UI
-│       └── ui/
-│           └── UIController.ts  # Screens
-└── server/
-    ├── index.ts                 # Server
-    └── rooms/
-        ├── schema.ts            # State
-        └── BattleRoom.ts        # Room</pre>
+          <h3>📁 FILE_STRUCTURE</h3>
+          <pre>V5_SYSTEM/
+├── CLIENT_NET/
+│   └── SRC/
+│       ├── MAIN_TS              # ENTRY_POINT
+│       ├── CORE/
+│       │   ├── GAME_ENGINE_TS   # PIXI_RENDERER
+│       │   ├── NETWORK_MGR_TS   # COLYSEUS_CLIENT
+│       │   └── INPUT_MGR_TS     # MOUSE_KB_HANDLER
+│       ├── FEATURES_BATTLE/
+│       │   ├── BATTLE_MGR_TS    # COMBAT_LOGIC
+│       │   ├── BATTLE_RENDERER_TS # VISUALIZATION
+│       │   └── VIRUS_TUBE_TS    # PARAM_UI
+│       └── UI/
+│           └── UI_CTRL_TS       # SCREEN_MANAGER
+└── SERVER_NET/
+    ├── INDEX_TS                 # SERVER_ENTRY
+    └── ROOMS/
+        ├── SCHEMA_TS            # STATE_DEF
+        └── BATTLE_ROOM_TS       # ROOM_LOGIC</pre>
         </div>
       </div>
     </div>
@@ -330,13 +825,13 @@
   <div class="zoom-controls">
     <button class="zoom-btn" onclick="zoomIn()">+</button>
     <button class="zoom-btn" onclick="zoomOut()">−</button>
-    <button class="zoom-btn" onclick="resetZoom()">⟲</button>
+    <button class="zoom-btn" onclick="resetZoom()">RST</button>
   </div>
 
   <div class="tooltip" id="tooltip"><h4 id="tooltip-title"></h4><p id="tooltip-content"></p></div>
 
   <script>
-    const tabTitles = { diagram: 'Node Diagram', flow: 'Data Flow', dependency: 'Dependencies', stats: 'Statistics' };
+    const tabTitles = { diagram: 'NODE MAP', flow: 'DATA FLOW', dependency: 'NET LINKS', stats: 'SYSTEM STATS' };
     document.querySelectorAll('.tab-circle').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab-circle').forEach(t => t.classList.remove('active'));
@@ -379,7 +874,7 @@
         tt.querySelector('#tooltip-content').innerHTML = node.querySelector('.node-description').innerHTML + '<br><br>' + (node.querySelector('.node-methods')?.innerHTML || '');
         tt.style.display = 'block';
       });
-      node.addEventListener('mousemove', e => { tt.style.left = e.pageX + 10 + 'px'; tt.style.top = e.pageY + 10 + 'px'; });
+      node.addEventListener('mousemove', e => { tt.style.left = e.pageX + 15 + 'px'; tt.style.top = e.pageY + 15 + 'px'; });
       node.addEventListener('mouseleave', () => { document.getElementById('tooltip').style.display = 'none'; });
     });
     let zoom = 1;
