@@ -170,31 +170,30 @@ export class VirusTubeManager {
       
       // Change header to show player's virus
       if (this.virusTabTitle) {
-        const virusColor = this.playerColor === 'red' ? '🔴 RED' : '🔵 BLUE';
-        const virusName = this.playerColor === 'red' ? 'Virus 1' : 'Virus 2';
-        this.virusTabTitle.textContent = `YOUR VIRUS (${virusColor}) - 12 points`;
+        const virusColor = this.playerColor === 'red' ? '🔴 КРАСНЫЙ' : '🔵 СИНИЙ';
+        this.virusTabTitle.textContent = `ВАШ ВИРУС (${virusColor}) - 12 очков`;
       }
-      
+
       // Set current virus based on player color
       this.currentVirusIndex = this.playerColor === 'red' ? 0 : 1;
-      
+
       console.log(`[VirusTube] Multiplayer mode: Virus ${this.currentVirusIndex + 1} (${this.playerColor})`);
     } else {
       // Sandbox mode - show all tabs
       if (this.virusTabsContainer) {
         this.virusTabsContainer.style.display = 'flex';
       }
-      
+
       this.virusTabs.forEach(tab => {
         (tab as HTMLElement).style.display = 'flex';
       });
-      
+
       if (this.virusTabTitle) {
-        this.virusTabTitle.textContent = 'Virus 1 Parameters (12 points)';
+        this.virusTabTitle.textContent = 'Параметры Вируса 1 (12 очков)';
       }
-      
+
       this.currentVirusIndex = 0;
-      
+
       console.log('[VirusTube] Sandbox mode: 4 viruses');
     }
     
@@ -270,12 +269,12 @@ export class VirusTubeManager {
     
     // Обновляем заголовок
     if (this.virusTabTitle) {
-      this.virusTabTitle.textContent = `Virus ${virusIdx + 1} Parameters (12 points)`;
+      this.virusTabTitle.textContent = `Параметры Вируса ${virusIdx + 1} (12 очков)`;
     }
-    
+
     // Обновляем отображение
     this.updateDisplay();
-    
+
     console.log(`[VirusTube] Switched to Virus ${virusIdx + 1}`);
   }
   

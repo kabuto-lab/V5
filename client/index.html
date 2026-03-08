@@ -1099,24 +1099,24 @@
           <!-- Sandbox Mode Controls -->
           <div id="sandboxControls" style="margin-top: 15px; display: none;">
             <!-- READY Button (inactive until 12 points spent) -->
-            <button id="readyBtn" class="btn vintage-btn" disabled style="width: 100%; margin-bottom: 10px;">👍 READY (0/12)</button>
+            <button id="readyBtn" class="btn vintage-btn" disabled style="width: 100%; margin-bottom: 10px;">👍 ГОТОВ (0/12)</button>
             <!-- START BATTLE Button -->
-            <button id="startBattleBtn" class="btn vintage-btn" style="width: 100%; margin-bottom: 10px;">⚔️ START BATTLE ⚔️</button>
+            <button id="startBattleBtn" class="btn vintage-btn" style="width: 100%; margin-bottom: 10px;">⚔️ НАЧАТЬ БИТВУ ⚔️</button>
             <!-- RANDOMIZE ALL Button -->
-            <button id="randomizeAllBtn" class="btn vintage-btn" style="width: 100%;">🎲 RANDOMIZE ALL</button>
+            <button id="randomizeAllBtn" class="btn vintage-btn" style="width: 100%;">🎲 СЛУЧАЙНО ВСЁ</button>
           </div>
           <!-- Room Mode Controls -->
           <div id="roomControls" style="margin-top: 15px; display: none;">
             <!-- READY Button (inactive until 12 points spent) -->
-            <button id="readyBtn" class="btn vintage-btn" disabled style="width: 100%;">👍 READY (0/12)</button>
+            <button id="readyBtn" class="btn vintage-btn" disabled style="width: 100%;">👍 ГОТОВ (0/12)</button>
           </div>
         </div>
         <!-- Чат в левом нижнем углу сайдбара - полная ширина (только для мультиплеера) -->
         <div id="chat-container" style="width: 100%; background: rgba(15, 15, 35, 0.9); border-top: 2px solid #00ffff; padding: 10px; box-sizing: border-box; display: none;">
           <div id="chat-messages" style="height: 120px; overflow-y: auto; margin-bottom: 10px; color: #00ff00; font-family: 'PIXY', 'PIXY'; font-size: 0.85rem;"></div>
           <div id="chat-input-container" style="display: flex; gap: 5px;">
-            <input type="text" id="chat-input" placeholder="Type message..." style="flex-grow: 1; background: #0f0f23; color: #00ff00; border: 1px solid #00ffff; padding: 5px; font-family: 'PIXY', 'PIXY';">
-            <button id="chat-send-btn" style="background: #ff00ff; color: #0f0f23; border: none; padding: 5px 10px; cursor: pointer; font-family: 'PIXY', 'PIXY';">Send</button>
+            <input type="text" id="chat-input" placeholder="Введите сообщение..." style="flex-grow: 1; background: #0f0f23; color: #00ff00; border: 1px solid #00ffff; padding: 5px; font-family: 'PIXY', 'PIXY';">
+            <button id="chat-send-btn" style="background: #ff00ff; color: #0f0f23; border: none; padding: 5px 10px; cursor: pointer; font-family: 'PIXY', 'PIXY';">ОТПРАВИТЬ</button>
           </div>
         </div>
       </div>
@@ -1124,14 +1124,14 @@
 
     <!-- Landing Screen -->
     <div id="landingScreen" class="screen">
-      <h1 data-text="VYRU5">VYRU5</h1>
-      <p style="font-size: 1.2rem; color: #00ffff;">Multiplayer Viral Battle Arena</p>
+      <h1 data-text="ВИРУС">ВИРУС</h1>
+      <p style="font-size: 1.2rem; color: #00ffff;">Арена Вирусных Битв</p>
 
-      <button id="sandboxBtn" class="btn glitch-btn" style="width: 280px; background-color: #00ffff; color: #0f0f23; box-shadow: 3px 3px 0 #ff00ff;">👤 SINGLE PLAYER</button>
-      <button id="createRoomBtn" class="btn" style="width: 280px;">🌐 MULTIPLAYER</button>
+      <button id="sandboxBtn" class="btn glitch-btn" style="width: 280px; background-color: #00ffff; color: #0f0f23; box-shadow: 3px 3px 0 #ff00ff;">👤 ОДИНОЧНАЯ ИГРА</button>
+      <button id="createRoomBtn" class="btn" style="width: 280px;">🌐 СЕТЕВАЯ ИГРА</button>
       <div style="margin-top: 20px;">
-        <input type="text" id="roomIdInput" placeholder="Enter Room ID">
-        <button id="joinRoomBtn" class="btn">JOIN ROOM</button>
+        <input type="text" id="roomIdInput" placeholder="Введите код комнаты">
+        <button id="joinRoomBtn" class="btn">ПРИСОЕДИНИТЬСЯ</button>
       </div>
     </div>
 
@@ -1147,9 +1147,9 @@
 
       <!-- Victory Screen Overlay -->
       <div id="victoryOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; display: none; align-items: center; justify-content: center; flex-direction: column;">
-        <h1 id="victoryText" style="font-family: 'PIXY', 'PIXY'; font-size: 5rem; color: #00ffff; text-shadow: 0 0 30px #00ffff; margin-bottom: 20px;">VICTORY</h1>
-        <p id="victoryDetails" style="font-family: 'PIXY'; font-size: 1.5rem; color: #ffffff; margin-bottom: 30px;">RED VIRUS WINS</p>
-        <button id="victoryRestartBtn" class="btn" style="font-size: 1.5rem; padding: 20px 40px; animation: pulse 1s ease-in-out infinite;">🔄 RESTART BATTLE</button>
+        <h1 id="victoryText" style="font-family: 'PIXY', 'PIXY'; font-size: 5rem; color: #00ffff; text-shadow: 0 0 30px #00ffff; margin-bottom: 20px;">ПОБЕДА</h1>
+        <p id="victoryDetails" style="font-family: 'PIXY'; font-size: 1.5rem; color: #ffffff; margin-bottom: 30px;">КРАСНЫЙ ВИРУС ПОБЕДИЛ</p>
+        <button id="victoryRestartBtn" class="btn" style="font-size: 1.5rem; padding: 20px 40px; animation: pulse 1s ease-in-out infinite;">🔄 ПЕРЕЗАПУСТИТЬ БИТВУ</button>
       </div>
     </div>
 
@@ -1165,7 +1165,7 @@
 
       <!-- Top panel wrapper with player names and room ID -->
       <div id="topPanelWrapper">
-        <div id="player1Name">Player 1</div>
+        <div id="player1Name">Игрок 1</div>
         <div id="topRoomIdPanel">
           <span style="color: #ffff00;">Всего игроков: </span>
           <span id="playerCountTop" style="color: #00ff00;">0</span>
@@ -1173,7 +1173,7 @@
           <span style="color: #00ffff; margin-left: 8px;">|</span>
           <span id="topRoomId" class="copyable-id" style="color: #00ff00; margin-left: 8px;"></span>
         </div>
-        <div id="player2Name">Player 2</div>
+        <div id="player2Name">Игрок 2</div>
         
         <!-- Прогресс битвы (фон панели) -->
         <div id="battleProgress" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 25px; overflow: hidden; z-index: -1; background: linear-gradient(90deg, 
@@ -1205,39 +1205,39 @@
     <div id="sidebar" class="sidebar right-sidebar">
       <div class="sidebar-header">
         <div class="sidebar-title-controls">
-          <h3>Virus Parameters</h3>
+          <h3>Параметры Вируса</h3>
           <button id="closeSidebarBtn" class="btn close-btn">✕</button>
         </div>
         <!-- Virus Tabs -->
         <div id="virusTabs" style="display: flex; gap: 5px; margin-top: 10px;">
-          <button class="virus-tab active" data-virus="0" style="flex: 1; padding: 8px; background: #ff0066; color: #fff; border: 2px solid #ff6699; cursor: pointer; font-family: 'PIXY'; font-weight: bold;">VIRUS 1</button>
-          <button class="virus-tab" data-virus="1" style="flex: 1; padding: 8px; background: #00ffff; color: #000; border: 2px solid #66ffff; cursor: pointer; font-family: 'PIXY'; font-weight: bold;">VIRUS 2</button>
-          <button class="virus-tab" data-virus="2" style="flex: 1; padding: 8px; background: #cc00ff; color: #fff; border: 2px solid #ff66ff; cursor: pointer; font-family: 'PIXY'; font-weight: bold;">VIRUS 3</button>
-          <button class="virus-tab" data-virus="3" style="flex: 1; padding: 8px; background: #ffaa00; color: #000; border: 2px solid #ffcc66; cursor: pointer; font-family: 'PIXY'; font-weight: bold;">VIRUS 4</button>
+          <button class="virus-tab active" data-virus="0" style="flex: 1; padding: 8px; background: #ff0066; color: #fff; border: 2px solid #ff6699; cursor: pointer; font-family: 'PIXY'; font-weight: bold;">ВИРУС 1</button>
+          <button class="virus-tab" data-virus="1" style="flex: 1; padding: 8px; background: #00ffff; color: #000; border: 2px solid #66ffff; cursor: pointer; font-family: 'PIXY'; font-weight: bold;">ВИРУС 2</button>
+          <button class="virus-tab" data-virus="2" style="flex: 1; padding: 8px; background: #cc00ff; color: #fff; border: 2px solid #ff66ff; cursor: pointer; font-family: 'PIXY'; font-weight: bold;">ВИРУС 3</button>
+          <button class="virus-tab" data-virus="3" style="flex: 1; padding: 8px; background: #ffaa00; color: #000; border: 2px solid #ffcc66; cursor: pointer; font-family: 'PIXY'; font-weight: bold;">ВИРУС 4</button>
         </div>
       </div>
       <div class="sidebar-content">
         <!-- Virus Parameter Selection -->
         <div class="setting-item">
-          <h4 id="virusTabTitle">Virus 1 Parameters (12 points)</h4>
+          <h4 id="virusTabTitle">Параметры Вируса 1 (12 очков)</h4>
           <div id="virusParamsContainer">
             <!-- Row 1 -->
             <div class="param-row">
               <div class="param-cell" data-param="aggression">
                 <div class="param-emoji">⚔️</div>
-                <div class="param-name">Aggression</div>
+                <div class="param-name">Агрессия</div>
                 <div class="param-value" id="param-aggression">0</div>
                 <div class="param-liquid"></div>
               </div>
               <div class="param-cell" data-param="mutation">
                 <div class="param-emoji">🧬</div>
-                <div class="param-name">Mutation</div>
+                <div class="param-name">Мутация</div>
                 <div class="param-value" id="param-mutation">0</div>
                 <div class="param-liquid"></div>
               </div>
               <div class="param-cell" data-param="speed">
                 <div class="param-emoji">⚡</div>
-                <div class="param-name">Speed</div>
+                <div class="param-name">Скорость</div>
                 <div class="param-value" id="param-speed">0</div>
                 <div class="param-liquid"></div>
               </div>
@@ -1247,19 +1247,19 @@
             <div class="param-row">
               <div class="param-cell" data-param="defense">
                 <div class="param-emoji">🛡️</div>
-                <div class="param-name">Defense</div>
+                <div class="param-name">Защита</div>
                 <div class="param-value" id="param-defense">0</div>
                 <div class="param-liquid"></div>
               </div>
               <div class="param-cell" data-param="reproduction">
                 <div class="param-emoji">🦠</div>
-                <div class="param-name">Reproduction</div>
+                <div class="param-name">Размножение</div>
                 <div class="param-value" id="param-reproduction">0</div>
                 <div class="param-liquid"></div>
               </div>
               <div class="param-cell" data-param="stealth">
                 <div class="param-emoji">👻</div>
-                <div class="param-name">Stealth</div>
+                <div class="param-name">Скрытность</div>
                 <div class="param-value" id="param-stealth">0</div>
                 <div class="param-liquid"></div>
               </div>
@@ -1269,19 +1269,19 @@
             <div class="param-row">
               <div class="param-cell" data-param="virulence">
                 <div class="param-emoji">☣️</div>
-                <div class="param-name">Virulence</div>
+                <div class="param-name">Вирулентность</div>
                 <div class="param-value" id="param-virulence">0</div>
                 <div class="param-liquid"></div>
               </div>
               <div class="param-cell" data-param="resilience">
                 <div class="param-emoji">💪</div>
-                <div class="param-name">Resilience</div>
+                <div class="param-name">Живучесть</div>
                 <div class="param-value" id="param-resilience">0</div>
                 <div class="param-liquid"></div>
               </div>
               <div class="param-cell" data-param="mobility">
                 <div class="param-emoji">🚶</div>
-                <div class="param-name">Mobility</div>
+                <div class="param-name">Мобильность</div>
                 <div class="param-value" id="param-mobility">0</div>
                 <div class="param-liquid"></div>
               </div>
@@ -1291,27 +1291,27 @@
             <div class="param-row">
               <div class="param-cell" data-param="intellect">
                 <div class="param-emoji">🧠</div>
-                <div class="param-name">Intellect</div>
+                <div class="param-name">Интеллект</div>
                 <div class="param-value" id="param-intellect">0</div>
                 <div class="param-liquid"></div>
               </div>
               <div class="param-cell" data-param="contagiousness">
                 <div class="param-emoji">🫁</div>
-                <div class="param-name">Contagiousness</div>
+                <div class="param-name">Заразность</div>
                 <div class="param-value" id="param-contagiousness">0</div>
                 <div class="param-liquid"></div>
               </div>
               <div class="param-cell" data-param="lethality">
                 <div class="param-emoji">💀</div>
-                <div class="param-name">Lethality</div>
+                <div class="param-name">Смертельность</div>
                 <div class="param-value" id="param-lethality">0</div>
                 <div class="param-liquid"></div>
               </div>
             </div>
           </div>
-          
+
           <div class="points-summary">
-            Points remaining: <span id="points-remaining">12</span>
+            Очков осталось: <span id="points-remaining">12</span>
           </div>
         </div>
       </div>

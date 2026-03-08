@@ -15,7 +15,7 @@ export default defineConfig({
           'game-core': ['./src/core/GameEngine', './src/core/NetworkManager'],
           'battle-feature': ['./src/features/battle/BattleRenderer'],
           'lab-feature': ['./src/features/lab/LaboratoryManager'], // Lazy loaded
-          'vendor-pixi': ['pixi.js', 'pixi-filters'],
+          'vendor-pixi': ['pixi.js'],
           'vendor-colyseus': ['colyseus.js']
         }
       }

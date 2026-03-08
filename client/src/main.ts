@@ -85,8 +85,8 @@ class MainApp {
           this.battleRenderer.show();
         }
       } else if (state.type === 'ended') {
-        const winnerText = state.winner === 'A' ? 'RED (Player 1)' : state.winner === 'B' ? 'BLUE (Player 2)' : 'DRAW';
-        alert(`Battle Over!\nWinner: ${winnerText}`);
+        const winnerText = state.winner === 'A' ? 'КРАСНЫЙ (Игрок 1)' : state.winner === 'B' ? 'СИНИЙ (Игрок 2)' : 'НИЧЬЯ';
+        alert(`Битва окончена!\nПобедитель: ${winnerText}`);
         if (this.battleRenderer) {
           this.battleRenderer.hide();
         }
@@ -210,15 +210,15 @@ class MainApp {
       } else if (state.type === 'ended') {
         // Определяем победителя по цвету вируса
         const winnerText = state.winner === 'A'
-          ? 'RED (Player 1)'
+          ? 'КРАСНЫЙ (Игрок 1)'
           : state.winner === 'B'
-            ? 'BLUE (Player 2)'
-            : 'Draw';
+            ? 'СИНИЙ (Игрок 2)'
+            : 'Ничья';
         const percent = state.winner !== 'draw'
           ? ((state.winner === 'A' ? state.virusACount : state.virusBCount) /
              (state.virusACount + state.virusBCount) * 100).toFixed(1)
           : '0';
-        alert(`Battle ended!\nWinner: ${winnerText}\nTerritory: ${percent}%`);
+        alert(`Битва окончена!\nПобедитель: ${winnerText}\nТерритория: ${percent}%`);
         if (this.battleRenderer) {
           this.battleRenderer.hide();
         }
