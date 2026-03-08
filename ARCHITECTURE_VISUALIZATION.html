@@ -3,683 +3,228 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ViRU5 V5 - Архитектура и Поток Данных / Architecture & Data Flow</title>
+  <title>ViRU5 V5 - Архитектура</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
       color: #00ff00;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
+      width: 100vw; height: 100vh; overflow: hidden;
     }
-
     .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: rgba(15, 15, 35, 0.85);
-      backdrop-filter: blur(10px);
-      color: #0f0f23;
-      padding: 8px 20px;
-      text-align: center;
-      z-index: 1000;
-      border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+      position: fixed; top: 15px; left: 20px; z-index: 10000;
+      display: flex; align-items: center; gap: 15px;
+      background: rgba(15, 15, 35, 0.7); backdrop-filter: blur(10px);
+      padding: 10px 20px; border-radius: 30px;
+      border: 1px solid rgba(0, 255, 255, 0.3);
     }
-
-    .header h1 {
-      font-size: 1.2rem;
-      margin: 0;
-      color: #00ffff;
-      text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    .header h1 { font-size: 1rem; color: #00ffff; text-shadow: 0 0 10px rgba(0, 255, 255, 0.5); white-space: nowrap; }
+    .header p { font-size: 0.65rem; opacity: 0.6; color: #ff00ff; }
+    .tab-circles { display: flex; gap: 8px; }
+    .tab-circle {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(0, 255, 255, 0.1); border: 2px solid rgba(0, 255, 255, 0.3);
+      cursor: pointer; transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; color: #00ffff;
     }
-
-    .header p {
-      font-size: 0.75rem;
-      opacity: 0.7;
-      margin-top: 2px;
-      color: #ff00ff;
+    .tab-circle:hover { background: rgba(0, 255, 255, 0.2); border-color: #00ffff; transform: scale(1.1); }
+    .tab-circle.active { background: rgba(0, 255, 255, 0.3); border-color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); }
+    .tab-title-display {
+      font-size: 0.85rem; color: #00ffff; opacity: 0.8;
+      min-width: 150px; border-left: 1px solid rgba(0, 255, 255, 0.3); padding-left: 15px;
     }
-
-    .container {
-      width: 100vw;
-      height: 100vh;
-      padding: 50px 10px 10px;
-      overflow: hidden;
-    }
-
-    .section {
-      background: transparent;
-      border: none;
-      border-radius: 0;
-      padding: 0;
-      margin: 0;
-      box-shadow: none;
-      width: 100%;
-      height: calc(100vh - 50px);
-    }
-
-    .section h2 {
-      color: #00ffff;
-      margin: 0 0 10px 0;
-      font-size: 1rem;
-      border: none;
-      padding: 8px 15px;
-      background: rgba(0, 255, 255, 0.1);
-      border-radius: 5px;
-    }
-
-    /* Node-based diagram styles */
-    .diagram-container {
-      position: relative;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
-      padding: 20px;
-      width: 100%;
-      height: calc(100vh - 120px);
-      overflow: auto;
-    }
-
+    .container { width: 100vw; height: 100vh; padding: 0; overflow: hidden; }
+    .section { background: transparent; border: none; padding: 0; margin: 0; width: 100%; height: 100%; }
+    .tab-content { display: none; width: 100%; height: 100%; }
+    .tab-content.active { display: block; }
+    .diagram-container { position: relative; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.2); overflow: auto; }
     .node {
-      position: absolute;
-      background: rgba(26, 26, 62, 0.9);
-      border: 2px solid;
-      border-radius: 6px;
-      padding: 8px;
-      min-width: 140px;
-      max-width: 200px;
-      cursor: move;
-      transition: transform 0.2s, box-shadow 0.2s;
-      z-index: 10;
+      position: absolute; background: rgba(26, 26, 62, 0.9); border: 2px solid; border-radius: 6px;
+      padding: 8px; min-width: 140px; max-width: 200px; cursor: move;
+      transition: transform 0.2s, box-shadow 0.2s; z-index: 10;
     }
-
-    .node:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 20px currentColor;
-      z-index: 100;
-    }
-
+    .node:hover { transform: scale(1.03); box-shadow: 0 0 20px currentColor; z-index: 100; }
     .node-core { border-color: #ff0066; color: #ff0066; }
     .node-feature { border-color: #00ffff; color: #00ffff; }
     .node-ui { border-color: #00ff00; color: #00ff00; }
     .node-server { border-color: #ffaa00; color: #ffaa00; }
     .node-data { border-color: #cc00ff; color: #cc00ff; }
-
-    .node-title {
-      font-weight: bold;
-      font-size: 0.85rem;
-      margin-bottom: 5px;
-      text-align: center;
-    }
-
-    .node-description {
-      font-size: 0.7rem;
-      opacity: 0.7;
-      line-height: 1.3;
-    }
-
+    .node-title { font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; text-align: center; }
+    .node-description { font-size: 0.7rem; opacity: 0.7; line-height: 1.3; }
     .node-methods {
-      margin-top: 6px;
-      font-size: 0.65rem;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 5px;
-      border-radius: 3px;
-      display: none;
+      margin-top: 6px; font-size: 0.65rem; background: rgba(0, 0, 0, 0.2);
+      padding: 5px; border-radius: 3px; display: none;
     }
-
-    .node:hover .node-methods {
-      display: block;
-    }
-
-    .node-methods h4 {
-      margin-bottom: 3px;
-      font-size: 0.65rem;
-      opacity: 0.8;
-    }
-
-    .node-methods ul {
-      list-style: none;
-      padding-left: 3px;
-    }
-
-    .node-methods li {
-      padding: 1px 0;
-    }
-
-    .node-methods li::before {
-      content: "▸ ";
-      color: currentColor;
-    }
-
-    /* Connection lines */
-    .connections {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 5;
-    }
-
-    .connection {
-      position: absolute;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, #00ffff, transparent);
-      transform-origin: left center;
-      box-shadow: 0 0 10px #00ffff;
-    }
-
-    .connection-arrow {
-      position: absolute;
-      width: 0;
-      height: 0;
-      border-left: 10px solid #00ffff;
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-    }
-
-    /* Legend */
+    .node:hover .node-methods { display: block; }
+    .node-methods h4 { margin-bottom: 3px; font-size: 0.65rem; opacity: 0.8; }
+    .node-methods ul { list-style: none; padding-left: 3px; }
+    .node-methods li { padding: 1px 0; }
+    .node-methods li::before { content: "▸ "; color: currentColor; }
+    .connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+    .connection { position: absolute; height: 2px; background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.6), transparent); transform-origin: left center; }
     .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
-      padding: 8px;
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 5px;
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      z-index: 100;
+      position: fixed; bottom: 15px; left: 15px; z-index: 1000;
+      display: flex; flex-wrap: wrap; gap: 10px; padding: 10px;
+      background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);
+      border-radius: 8px; border: 1px solid rgba(0, 255, 255, 0.3);
     }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.7rem;
-    }
-
-    .legend-color {
-      width: 16px;
-      height: 16px;
-      border-radius: 3px;
-      border: 2px solid;
-    }
-
-    /* Flow chart */
-    .flow-container {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      padding: 10px;
-      height: calc(100vh - 100px);
-      overflow: auto;
-    }
-
-    .flow-row {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; }
+    .legend-color { width: 16px; height: 16px; border-radius: 3px; border: 2px solid; }
+    .flow-container { display: flex; flex-direction: column; gap: 20px; padding: 80px 20px 20px; width: 100%; height: 100%; overflow: auto; }
+    .flow-row { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
     .flow-box {
-      background: rgba(26, 26, 62, 0.9);
-      border: 1px solid #00ffff;
-      border-radius: 5px;
-      padding: 8px;
-      min-width: 140px;
-      text-align: center;
-      position: relative;
-      font-size: 0.75rem;
+      background: rgba(26, 26, 62, 0.9); border: 1px solid #00ffff; border-radius: 5px;
+      padding: 12px 20px; min-width: 160px; text-align: center; position: relative; font-size: 0.75rem;
     }
-
     .flow-box::after {
-      content: "↓";
-      position: absolute;
-      bottom: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 1.2rem;
-      color: #ff00ff;
-      animation: pulse 1s infinite;
+      content: "↓"; position: absolute; bottom: -22px; left: 50%;
+      transform: translateX(-50%); font-size: 1.4rem; color: #ff00ff; animation: pulse 1s infinite;
     }
-
-    .flow-row:last-child .flow-box::after {
-      display: none;
+    .flow-row:last-child .flow-box::after { display: none; }
+    .flow-box strong { display: block; margin-bottom: 5px; color: #00ffff; font-size: 0.8rem; }
+    .flow-box small { display: block; opacity: 0.6; margin-bottom: 5px; }
+    .flow-box code { display: block; background: rgba(0, 0, 0, 0.3); padding: 4px 8px; border-radius: 3px; font-size: 0.65rem; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); } 50% { opacity: 0.5; transform: translateX(-50%) scale(1.2); } }
+    .tree-container {
+      padding: 80px 40px 20px; width: 100%; height: 100%; overflow: auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
     }
-
-    .flow-box strong {
-      display: block;
-      margin-bottom: 3px;
-      color: #00ffff;
-    }
-
-    .flow-box small {
-      display: block;
-      opacity: 0.6;
-      margin-bottom: 3px;
-    }
-
-    .flow-box code {
-      display: block;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 2px 5px;
-      border-radius: 3px;
-      font-size: 0.65rem;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
-      50% { opacity: 0.5; transform: translateX(-50%) scale(1.2); }
-    }
-
-    /* Dependency tree */
-    .tree {
-      list-style: none;
-      padding-left: 15px;
-      font-size: 0.75rem;
-    }
-
-    .tree ul {
-      list-style: none;
-      padding-left: 20px;
-      border-left: 1px dashed rgba(0, 255, 255, 0.3);
-    }
-
-    .tree li {
-      position: relative;
-      padding: 3px 0;
-    }
-
-    .tree li::before {
-      content: "├─";
-      position: absolute;
-      left: -15px;
-      color: rgba(0, 255, 255, 0.5);
-    }
-
-    .tree li:last-child::before {
-      content: "└─";
-    }
-
+    .tree { list-style: none; padding-left: 20px; font-size: 0.8rem; }
+    .tree h3 { color: #00ff00; margin-bottom: 15px; font-size: 1rem; }
+    .tree ul { list-style: none; padding-left: 25px; border-left: 1px dashed rgba(0, 255, 255, 0.3); }
+    .tree li { position: relative; padding: 5px 0; }
+    .tree li::before { content: "├─"; position: absolute; left: -20px; color: rgba(0, 255, 255, 0.5); }
+    .tree li:last-child::before { content: "└─"; }
     .tree-item {
-      display: inline-block;
-      background: rgba(0, 255, 255, 0.05);
-      padding: 3px 8px;
-      border-radius: 3px;
-      border-left: 2px solid #00ffff;
-      font-size: 0.7rem;
+      display: inline-block; background: rgba(0, 255, 255, 0.05);
+      padding: 4px 10px; border-radius: 3px; border-left: 2px solid #00ffff; font-size: 0.75rem;
     }
-
-    .tree-item.server {
-      border-color: #ffaa00;
-      background: rgba(255, 170, 0, 0.05);
-    }
-
-    .tree-item.client {
-      border-color: #00ff00;
-      background: rgba(0, 255, 0, 0.05);
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 5px;
-      margin-bottom: 10px;
-      padding: 0 10px;
-    }
-
-    .tab {
-      padding: 6px 12px;
-      background: rgba(0, 255, 255, 0.05);
-      border: 1px solid rgba(0, 255, 255, 0.3);
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.8rem;
-      color: #00ffff;
-    }
-
-    .tab:hover {
-      background: rgba(0, 255, 255, 0.15);
-      border-color: #00ffff;
-    }
-
-    .tab.active {
-      background: rgba(0, 255, 255, 0.2);
-      border-color: #00ffff;
-      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* Stats */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .stat-card {
-      background: rgba(26, 26, 62, 0.8);
-      border: 1px solid #ff00ff;
-      border-radius: 5px;
-      padding: 10px;
-      text-align: center;
-    }
-
-    .stat-number {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #00ffff;
-    }
-
-    .stat-label {
-      font-size: 0.65rem;
-      opacity: 0.7;
-      margin-top: 3px;
-    }
-
-    /* Zoom controls */
-    .zoom-controls {
-      position: fixed;
-      bottom: 15px;
-      right: 15px;
-      display: flex;
-      gap: 5px;
-      z-index: 1000;
-    }
-
+    .tree-item.server { border-color: #ffaa00; background: rgba(255, 170, 0, 0.05); }
+    .tree-item.client { border-color: #00ff00; background: rgba(0, 255, 0, 0.05); }
+    .stats-container { padding: 80px 40px 20px; width: 100%; height: 100%; overflow: auto; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+    .stat-card { background: rgba(26, 26, 62, 0.8); border: 1px solid #ff00ff; border-radius: 8px; padding: 20px; text-align: center; }
+    .stat-number { font-size: 2rem; font-weight: bold; color: #00ffff; }
+    .stat-label { font-size: 0.75rem; opacity: 0.7; margin-top: 8px; }
+    .stats-container h3 { color: #00ffff; margin-top: 30px; font-size: 1.1rem; }
+    .stats-container pre { background: rgba(0, 0, 0, 0.5); padding: 20px; border-radius: 8px; overflow-x: auto; color: #00ff00; font-size: 0.75rem; margin-top: 15px; }
+    .zoom-controls { position: fixed; bottom: 15px; right: 15px; display: flex; gap: 8px; z-index: 1000; }
     .zoom-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(255, 0, 255, 0.8);
-      color: #0f0f23;
-      border: none;
-      font-size: 1.2rem;
-      cursor: pointer;
-      box-shadow: 0 2px 10px rgba(255, 0, 255, 0.5);
-      transition: transform 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255, 0, 255, 0.8); color: #0f0f23; border: none;
+      font-size: 1.3rem; cursor: pointer; box-shadow: 0 2px 10px rgba(255, 0, 255, 0.5);
+      transition: transform 0.2s; display: flex; align-items: center; justify-content: center;
     }
-
-    .zoom-btn:hover {
-      transform: scale(1.15);
-      background: rgba(255, 0, 255, 1);
-    }
-
-    /* Tooltip */
+    .zoom-btn:hover { transform: scale(1.15); background: rgba(255, 0, 255, 1); }
     .tooltip {
-      position: fixed;
-      background: rgba(0, 0, 0, 0.95);
-      border: 1px solid #00ffff;
-      border-radius: 5px;
-      padding: 8px;
-      max-width: 300px;
-      z-index: 10000;
-      pointer-events: none;
-      display: none;
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-      font-size: 0.7rem;
+      position: fixed; background: rgba(0, 0, 0, 0.95); border: 1px solid #00ffff;
+      border-radius: 5px; padding: 10px; max-width: 300px; z-index: 10000;
+      pointer-events: none; display: none; box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); font-size: 0.75rem;
     }
-
-    .tooltip h4 {
-      color: #00ffff;
-      margin-bottom: 5px;
-      font-size: 0.75rem;
-    }
-
-    .tooltip p {
-      font-size: 0.7rem;
-      line-height: 1.4;
-      opacity: 0.8;
-    }
+    .tooltip h4 { color: #00ffff; margin-bottom: 8px; font-size: 0.8rem; }
+    .tooltip p { font-size: 0.75rem; line-height: 1.4; opacity: 0.8; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🦠 ViRU5 V5 - Архитектура и Поток Данных</h1>
-    <p>Architecture & Data Flow Visualization / Визуализация Архитектуры</p>
+    <div><h1>🦠 ViRU5 V5 - Архитектура</h1><p>Architecture</p></div>
+    <div class="tab-circles">
+      <div class="tab-circle active" data-tab="diagram" title="Node Diagram">📊</div>
+      <div class="tab-circle" data-tab="flow" title="Data Flow">🔄</div>
+      <div class="tab-circle" data-tab="dependency" title="Dependencies">🌳</div>
+      <div class="tab-circle" data-tab="stats" title="Statistics">📈</div>
+    </div>
+    <div class="tab-title-display" id="tabTitleDisplay">Node Diagram</div>
   </div>
 
   <div class="container">
-    <!-- Tabs -->
-    <div class="tabs">
-      <div class="tab active" data-tab="diagram">📊 Node Diagram</div>
-      <div class="tab" data-tab="flow">🔄 Data Flow</div>
-      <div class="tab" data-tab="dependency">🌳 Dependencies</div>
-      <div class="tab" data-tab="stats">📈 Stats</div>
-    </div>
-
     <!-- Tab 1: Node Diagram -->
     <div id="diagram" class="tab-content active">
       <div class="section">
-        <h2>🏗️ Архитектура Системы / System Architecture</h2>
         <div class="diagram-container" id="nodeDiagram">
           <svg class="connections" id="connections"></svg>
-          
-          <!-- Core Nodes -->
-          <div class="node node-core" style="top: 30px; left: 30px;" data-tooltip="main">
+          <div class="node node-core" style="top: 50px; left: 50px;" data-tooltip="main">
             <div class="node-title">🎯 MainApp</div>
             <div class="node-description">Точка входа<br>Entry Point</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>constructor()</li>
-                <li>setupInteractions()</li>
-                <li>enterSandboxMode()</li>
-              </ul>
-            </div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>constructor()</li><li>setupInteractions()</li><li>enterSandboxMode()</li></ul></div>
           </div>
-
-          <div class="node node-core" style="top: 30px; left: 250px;" data-tooltip="gameEngine">
+          <div class="node node-core" style="top: 50px; left: 300px;" data-tooltip="gameEngine">
             <div class="node-title">⚙️ GameEngine</div>
-            <div class="node-description">PixiJS инициализация</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>init()</li>
-                <li>start()</li>
-                <li>resize()</li>
-              </ul>
-            </div>
+            <div class="node-description">PixiJS</div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>init()</li><li>start()</li><li>resize()</li></ul></div>
           </div>
-
-          <div class="node node-core" style="top: 30px; left: 470px;" data-tooltip="network">
+          <div class="node node-core" style="top: 50px; left: 550px;" data-tooltip="network">
             <div class="node-title">🌐 Network</div>
-            <div class="node-description">Сетевое взаимодействие</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>connectToServer()</li>
-                <li>joinRoom()</li>
-                <li>sendParameterUpdate()</li>
-              </ul>
-            </div>
+            <div class="node-description">Сеть</div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>connect()</li><li>joinRoom()</li><li>send()</li></ul></div>
           </div>
-
-          <div class="node node-core" style="top: 30px; left: 690px;" data-tooltip="input">
+          <div class="node node-core" style="top: 50px; left: 800px;" data-tooltip="input">
             <div class="node-title">🖱️ Input</div>
-            <div class="node-description">Обработка ввода</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>onMouseMove</li>
-                <li>onKeyDown</li>
-              </ul>
-            </div>
+            <div class="node-description">Ввод</div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>onMouse</li><li>onKey</li></ul></div>
           </div>
-
-          <!-- Feature Nodes -->
-          <div class="node node-feature" style="top: 200px; left: 30px;" data-tooltip="battleManager">
+          <div class="node node-feature" style="top: 250px; left: 50px;" data-tooltip="battleManager">
             <div class="node-title">⚔️ BattleMgr</div>
-            <div class="node-description">Логика битвы</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>startBattle()</li>
-                <li>spreadTick()</li>
-                <li>checkWin()</li>
-              </ul>
-            </div>
+            <div class="node-description">Логика</div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>startBattle()</li><li>spreadTick()</li><li>checkWin()</li></ul></div>
           </div>
-
-          <div class="node node-feature" style="top: 200px; left: 250px;" data-tooltip="battleRenderer">
+          <div class="node node-feature" style="top: 250px; left: 300px;" data-tooltip="battleRenderer">
             <div class="node-title">🎨 Renderer</div>
-            <div class="node-description">Визуализация</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>initGrid()</li>
-                <li>updateGrid()</li>
-                <li>show/hide()</li>
-              </ul>
-            </div>
+            <div class="node-description">Визуал</div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>initGrid()</li><li>updateGrid()</li></ul></div>
           </div>
-
-          <div class="node node-feature" style="top: 200px; left: 470px;" data-tooltip="virusTube">
+          <div class="node node-feature" style="top: 250px; left: 550px;" data-tooltip="virusTube">
             <div class="node-title">🧬 VirusTube</div>
-            <div class="node-description">UI параметров</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>addPoint()</li>
-                <li>removePoint()</li>
-                <li>randomize()</li>
-              </ul>
-            </div>
+            <div class="node-description">UI</div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>addPoint()</li><li>randomize()</li></ul></div>
           </div>
-
-          <div class="node node-feature" style="top: 200px; left: 690px;" data-tooltip="mouseFollower">
+          <div class="node node-feature" style="top: 250px; left: 800px;" data-tooltip="mouseFollower">
             <div class="node-title">👆 Mouse</div>
-            <div class="node-description">Следование</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>updatePos()</li>
-                <li>render()</li>
-              </ul>
-            </div>
+            <div class="node-description">Курсор</div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>updatePos()</li></ul></div>
           </div>
-
-          <!-- UI Nodes -->
-          <div class="node node-ui" style="top: 370px; left: 140px;" data-tooltip="uiController">
+          <div class="node node-ui" style="top: 450px; left: 175px;" data-tooltip="uiController">
             <div class="node-title">🖼️ UI Ctrl</div>
             <div class="node-description">Экраны</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>setView()</li>
-                <li>showScreen()</li>
-              </ul>
-            </div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>setView()</li><li>show()</li></ul></div>
           </div>
-
-          <div class="node node-ui" style="top: 370px; left: 360px;" data-tooltip="chat">
+          <div class="node node-ui" style="top: 450px; left: 425px;" data-tooltip="chat">
             <div class="node-title">💬 Chat</div>
             <div class="node-description">Чат</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>send()</li>
-                <li>receive()</li>
-              </ul>
-            </div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>send()</li><li>recv()</li></ul></div>
           </div>
-
-          <!-- Server Nodes -->
-          <div class="node node-server" style="top: 30px; left: 910px;" data-tooltip="server">
+          <div class="node node-server" style="top: 50px; left: 1050px;" data-tooltip="server">
             <div class="node-title">🖥️ Server</div>
             <div class="node-description">Сервер</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>Express</li>
-                <li>Colyseus</li>
-                <li>WebSocket</li>
-              </ul>
-            </div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>Express</li><li>Colyseus</li></ul></div>
           </div>
-
-          <div class="node node-server" style="top: 200px; left: 910px;" data-tooltip="battleRoom">
+          <div class="node node-server" style="top: 250px; left: 1050px;" data-tooltip="battleRoom">
             <div class="node-title">🏠 Room</div>
             <div class="node-description">Комната</div>
-            <div class="node-methods">
-              <h4>Методы:</h4>
-              <ul>
-                <li>onCreate()</li>
-                <li>onJoin()</li>
-                <li>onLeave()</li>
-              </ul>
-            </div>
+            <div class="node-methods"><h4>Методы:</h4><ul><li>onCreate()</li><li>onJoin()</li></ul></div>
           </div>
-
-          <div class="node node-server" style="top: 370px; left: 910px;" data-tooltip="schema">
+          <div class="node node-server" style="top: 450px; left: 1050px;" data-tooltip="schema">
             <div class="node-title">📋 Schema</div>
             <div class="node-description">Схема</div>
-            <div class="node-methods">
-              <h4>Поля:</h4>
-              <ul>
-                <li>players</li>
-                <li>grid</li>
-                <li>tick</li>
-              </ul>
-            </div>
+            <div class="node-methods"><h4>Поля:</h4><ul><li>players</li><li>grid</li></ul></div>
           </div>
-
-          <!-- Data Nodes -->
-          <div class="node node-data" style="top: 540px; left: 140px;" data-tooltip="gridConfig">
+          <div class="node node-data" style="top: 650px; left: 175px;" data-tooltip="gridConfig">
             <div class="node-title">📐 Grid</div>
             <div class="node-description">64×40=2560</div>
           </div>
-
-          <div class="node node-data" style="top: 540px; left: 360px;" data-tooltip="bioTypes">
+          <div class="node node-data" style="top: 650px; left: 425px;" data-tooltip="types">
             <div class="node-title">🧬 Types</div>
             <div class="node-description">Данные</div>
           </div>
         </div>
-
         <div class="legend">
-          <div class="legend-item">
-            <div class="legend-color" style="border-color: #ff0066; background: rgba(255, 0, 102, 0.2);"></div>
-            <span>Core / Ядро</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="border-color: #00ffff; background: rgba(0, 255, 255, 0.2);"></div>
-            <span>Features / Функции</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="border-color: #00ff00; background: rgba(0, 255, 0, 0.2);"></div>
-            <span>UI / Интерфейс</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="border-color: #ffaa00; background: rgba(255, 170, 0, 0.2);"></div>
-            <span>Server / Сервер</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="border-color: #cc00ff; background: rgba(200, 0, 255, 0.2);"></div>
-            <span>Data / Данные</span>
-          </div>
+          <div class="legend-item"><div class="legend-color" style="border-color:#ff0066;background:rgba(255,0,102,0.2)"></div><span>Core</span></div>
+          <div class="legend-item"><div class="legend-color" style="border-color:#00ffff;background:rgba(0,255,255,0.2)"></div><span>Features</span></div>
+          <div class="legend-item"><div class="legend-color" style="border-color:#00ff00;background:rgba(0,255,0,0.2)"></div><span>UI</span></div>
+          <div class="legend-item"><div class="legend-color" style="border-color:#ffaa00;background:rgba(255,170,0,0.2)"></div><span>Server</span></div>
+          <div class="legend-item"><div class="legend-color" style="border-color:#cc00ff;background:rgba(200,0,255,0.2)"></div><span>Data</span></div>
         </div>
       </div>
     </div>
@@ -687,117 +232,13 @@
     <!-- Tab 2: Data Flow -->
     <div id="flow" class="tab-content">
       <div class="section">
-        <h2>🔄 Поток Данных / Data Flow</h2>
-        
-        <h3 style="color: #00ff00; margin: 20px 0;">Одиночная Игра / Single Player (Sandbox)</h3>
         <div class="flow-container">
-          <div class="flow-row">
-            <div class="flow-box">
-              <strong>Игрок настраивает 4 вируса</strong><br>
-              <small>Player configures 4 viruses</small><br>
-              <code>VirusTubeManager</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box">
-              <strong>Нажатие "НАЧАТЬ БИТВУ"</strong><br>
-              <small>Click "START BATTLE"</small><br>
-              <code>Button Event</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box">
-              <strong>BattleManager.startBattle()</strong><br>
-              <small>Создание сетки / Create grid</small><br>
-              <code>64×40 = 2560 клеток</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box">
-              <strong>BattleManager.spreadTick()</strong><br>
-              <small>Каждые 500ms / Every 500ms</small><br>
-              <code>Распространение вирусов</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box">
-              <strong>BattleRenderer.updateGrid()</strong><br>
-              <small>Отрисовка / Rendering</small><br>
-              <code>PixiJS Graphics</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box">
-              <strong>Проверка победы</strong><br>
-              <small>Victory check</small><br>
-              <code>96% территории</code>
-            </div>
-          </div>
-        </div>
-
-        <h3 style="color: #ff00ff; margin: 40px 0 20px;">Сетевая Игра / Multiplayer</h3>
-        <div class="flow-container">
-          <div class="flow-row">
-            <div class="flow-box" style="border-color: #ff0066;">
-              <strong>Игрок 1 создаёт комнату</strong><br>
-              <small>Player 1 creates room</small><br>
-              <code>NetworkManager.createRoom()</code>
-            </div>
-            <div class="flow-box" style="border-color: #00ffff;">
-              <strong>Игрок 2 присоединяется</strong><br>
-              <small>Player 2 joins</small><br>
-              <code>NetworkManager.joinRoom()</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box" style="border-color: #ff0066;">
-              <strong>Оба настраивают вирусы</strong><br>
-              <small>Both configure viruses</small><br>
-              <code>VirusTubeManager</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box" style="border-color: #00ff00;">
-              <strong>Оба нажимают ГОТОВ</strong><br>
-              <small>Both click READY</small><br>
-              <code>sendToggleReady(true)</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box" style="border-color: #ffaa00;">
-              <strong>Server начинает отсчёт</strong><br>
-              <small>Server starts countdown</small><br>
-              <code>3... 2... 1... BATTLE!</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box" style="border-color: #ffaa00;">
-              <strong>Server запускает симуляцию</strong><br>
-              <small>Server starts simulation</small><br>
-              <code>setSimulationInterval(500ms)</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box" style="border-color: #ffaa00;">
-              <strong>Server → tick данные</strong><br>
-              <small>Server sends tick data</small><br>
-              <code>broadcast('tick', data)</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box" style="border-color: #00ffff;">
-              <strong>Clients отрисовывают</strong><br>
-              <small>Clients render</small><br>
-              <code>BattleRenderer.updateGrid()</code>
-            </div>
-          </div>
-          <div class="flow-row">
-            <div class="flow-box" style="border-color: #ffaa00;">
-              <strong>Server определяет победителя</strong><br>
-              <small>Server determines winner</small><br>
-              <code>checkVictory()</code>
-            </div>
-          </div>
+          <div class="flow-row"><div class="flow-box"><strong>Игрок настраивает вирусы</strong><small>Player configures</small><code>VirusTubeManager</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>НАЧАТЬ БИТВУ</strong><small>Click START</small><code>Button Event</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>BattleManager.startBattle()</strong><small>Create grid</small><code>64×40=2560</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>spreadTick() 500ms</strong><small>Every 500ms</small><code>Spread logic</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>Renderer.updateGrid()</strong><small>Render</small><code>PixiJS</code></div></div>
+          <div class="flow-row"><div class="flow-box"><strong>Victory Check</strong><small>96% territory</small><code>checkWin()</code></div></div>
         </div>
       </div>
     </div>
@@ -805,81 +246,43 @@
     <!-- Tab 3: Dependencies -->
     <div id="dependency" class="tab-content">
       <div class="section">
-        <h2>🌳 Зависимости / Dependencies</h2>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-          <div>
-            <h3 style="color: #00ff00;">Client Dependencies</h3>
-            <ul class="tree">
-              <li>
-                <span class="tree-item client">main.ts</span>
+        <div class="tree-container">
+          <div class="tree">
+            <h3>📦 Client Dependencies</h3>
+            <ul>
+              <li><span class="tree-item client">main.ts</span>
                 <ul>
-                  <li><span class="tree-item client">core/GameEngine.ts</span></li>
-                  <li><span class="tree-item client">core/NetworkManager.ts</span>
-                    <ul>
-                      <li><span class="tree-item client">colyseus.js</span></li>
-                    </ul>
+                  <li><span class="tree-item client">GameEngine.ts</span></li>
+                  <li><span class="tree-item client">NetworkManager.ts</span>
+                    <ul><li><span class="tree-item client">colyseus.js</span></li></ul>
                   </li>
-                  <li><span class="tree-item client">core/InputManager.ts</span></li>
-                  <li><span class="tree-item client">ui/UIController.ts</span></li>
-                  <li><span class="tree-item client">chat/ChatManager.ts</span></li>
-                  <li><span class="tree-item client">features/battle/BattleManager.ts</span>
-                    <ul>
-                      <li><span class="tree-item client">features/battle/GridConfig.ts</span></li>
-                      <li><span class="tree-item client">features/battle/BioTypes.ts</span></li>
-                    </ul>
+                  <li><span class="tree-item client">InputManager.ts</span></li>
+                  <li><span class="tree-item client">UIController.ts</span></li>
+                  <li><span class="tree-item client">BattleManager.ts</span>
+                    <ul><li><span class="tree-item client">GridConfig.ts</span></li></ul>
                   </li>
-                  <li><span class="tree-item client">features/battle/BattleRenderer.ts</span>
-                    <ul>
-                      <li><span class="tree-item client">pixi.js</span></li>
-                    </ul>
+                  <li><span class="tree-item client">BattleRenderer.ts</span>
+                    <ul><li><span class="tree-item client">pixi.js</span></li></ul>
                   </li>
-                  <li><span class="tree-item client">features/battle/VirusTubeManager.ts</span></li>
-                  <li><span class="tree-item client">features/mouse-follower/MouseFollowerManager.ts</span></li>
+                  <li><span class="tree-item client">VirusTubeManager.ts</span></li>
                 </ul>
               </li>
             </ul>
           </div>
-
-          <div>
-            <h3 style="color: #ffaa00;">Server Dependencies</h3>
-            <ul class="tree">
-              <li>
-                <span class="tree-item server">server/index.ts</span>
+          <div class="tree">
+            <h3>🖥️ Server Dependencies</h3>
+            <ul>
+              <li><span class="tree-item server">index.ts</span>
                 <ul>
                   <li><span class="tree-item server">express</span></li>
                   <li><span class="tree-item server">colyseus</span></li>
                   <li><span class="tree-item server">cors</span></li>
                 </ul>
               </li>
-              <li>
-                <span class="tree-item server">rooms/BattleRoom.ts</span>
-                <ul>
-                  <li><span class="tree-item server">rooms/schema.ts</span></li>
-                  <li><span class="tree-item server">colyseus</span></li>
-                </ul>
+              <li><span class="tree-item server">BattleRoom.ts</span>
+                <ul><li><span class="tree-item server">schema.ts</span></li></ul>
               </li>
             </ul>
-          </div>
-        </div>
-
-        <h3 style="color: #00ffff; margin-top: 30px;">NPM Packages</h3>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-number">pixi.js</div>
-            <div class="stat-label">v8.16 - Графический движок</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">colyseus</div>
-            <div class="stat-label">v0.15 - Multiplayer Framework</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">vite</div>
-            <div class="stat-label">v5.0 - Build Tool</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">express</div>
-            <div class="stat-label">v4.18 - HTTP Server</div>
           </div>
         </div>
       </div>
@@ -888,242 +291,107 @@
     <!-- Tab 4: Stats -->
     <div id="stats" class="tab-content">
       <div class="section">
-        <h2>📈 Статистика Проекта / Project Stats</h2>
-        
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-number">10</div>
-            <div class="stat-label">Основные файлы / Core Files</div>
+        <div class="stats-container">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-number">10</div><div class="stat-label">Core Files</div></div>
+            <div class="stat-card"><div class="stat-number">64×40</div><div class="stat-label">Grid Size</div></div>
+            <div class="stat-card"><div class="stat-number">2560</div><div class="stat-label">Total Cells</div></div>
+            <div class="stat-card"><div class="stat-number">12</div><div class="stat-label">Virus Params</div></div>
+            <div class="stat-card"><div class="stat-number">500ms</div><div class="stat-label">Tick Rate</div></div>
+            <div class="stat-card"><div class="stat-number">60</div><div class="stat-label">FPS</div></div>
+            <div class="stat-card"><div class="stat-number">4</div><div class="stat-label">Virus Modes</div></div>
+            <div class="stat-card"><div class="stat-number">96%</div><div class="stat-label">Victory</div></div>
           </div>
-          <div class="stat-card">
-            <div class="stat-number">64×40</div>
-            <div class="stat-label">Размер сетки / Grid Size</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">2560</div>
-            <div class="stat-label">Клеток / Total Cells</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">12</div>
-            <div class="stat-label">Параметров вируса / Virus Params</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">500ms</div>
-            <div class="stat-label">Tick Rate / Частота тиков</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">60</div>
-            <div class="stat-label">FPS / Кадров в секунду</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">4</div>
-            <div class="stat-label">Режима вирусов / Virus Modes</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">96%</div>
-            <div class="stat-label">Победа / Victory Threshold</div>
-          </div>
+          <h3>📁 File Structure</h3>
+          <pre>V5/
+├── client/
+│   └── src/
+│       ├── main.ts              # Entry point
+│       ├── core/
+│       │   ├── GameEngine.ts    # PixiJS
+│       │   ├── NetworkManager.ts# Colyseus
+│       │   └── InputManager.ts  # Input
+│       ├── features/battle/
+│       │   ├── BattleManager.ts # Logic
+│       │   ├── BattleRenderer.ts# Render
+│       │   └── VirusTubeManager.ts # UI
+│       └── ui/
+│           └── UIController.ts  # Screens
+└── server/
+    ├── index.ts                 # Server
+    └── rooms/
+        ├── schema.ts            # State
+        └── BattleRoom.ts        # Room</pre>
         </div>
-
-        <h3 style="color: #00ffff; margin-top: 40px;">Структура Файлов / File Structure</h3>
-        <pre style="background: rgba(0, 0, 0, 0.5); padding: 20px; border-radius: 8px; overflow-x: auto; color: #00ff00;">
-V5/
-├── 📄 package.json                 # Root workspace
-├── 📄 README.md                    # Documentation
-├── 📄 CODE_DOCUMENTATION_RU_EN.md  # Code docs (this file)
-│
-├── 📂 client/
-│   ├── 📄 package.json
-│   ├── 📄 tsconfig.json
-│   ├── 📄 vite.config.ts
-│   ├── 📄 index.html               # Main HTML
-│   └── 📂 src/
-│       ├── 📄 main.ts              # ⭐ Entry point
-│       ├── 📂 core/
-│       │   ├── 📄 GameEngine.ts    # PixiJS init
-│       │   ├── 📄 NetworkManager.ts# Networking
-│       │   └── 📄 InputManager.ts  # Input handling
-│       ├── 📂 features/
-│       │   ├── 📂 battle/
-│       │   │   ├── 📄 BattleManager.ts     # Battle logic
-│       │   │   ├── 📄 BattleRenderer.ts    # Visualization
-│       │   │   ├── 📄 VirusTubeManager.ts  # Param UI
-│       │   │   ├── 📄 GridConfig.ts        # Grid config
-│       │   │   └── 📄 BioTypes.ts          # Types
-│       │   ├── 📂 mouse-follower/
-│       │   │   └── 📄 MouseFollowerManager.ts
-│       │   └── 📂 lab/
-│       │       └── 📄 LaboratoryManager.ts
-│       ├── 📂 ui/
-│       │   └── 📄 UIController.ts  # Screen switching
-│       └── 📂 chat/
-│           └── 📄 ChatManager.ts   # Multiplayer chat
-│
-└── 📂 server/
-    ├── 📄 package.json
-    ├── 📄 tsconfig.json
-    ├── 📄 index.ts                 # ⭐ Server entry
-    └── 📂 rooms/
-        ├── 📄 schema.ts            # State schema
-        └── 📄 BattleRoom.ts        # Room logic
-        </pre>
       </div>
     </div>
   </div>
 
-  <!-- Zoom Controls -->
   <div class="zoom-controls">
     <button class="zoom-btn" onclick="zoomIn()">+</button>
     <button class="zoom-btn" onclick="zoomOut()">−</button>
     <button class="zoom-btn" onclick="resetZoom()">⟲</button>
   </div>
 
-  <!-- Tooltip -->
-  <div class="tooltip" id="tooltip">
-    <h4 id="tooltip-title"></h4>
-    <p id="tooltip-content"></p>
-  </div>
+  <div class="tooltip" id="tooltip"><h4 id="tooltip-title"></h4><p id="tooltip-content"></p></div>
 
   <script>
-    // Tab switching
-    document.querySelectorAll('.tab').forEach(tab => {
+    const tabTitles = { diagram: 'Node Diagram', flow: 'Data Flow', dependency: 'Dependencies', stats: 'Statistics' };
+    document.querySelectorAll('.tab-circle').forEach(tab => {
       tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-circle').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
         tab.classList.add('active');
         document.getElementById(tab.dataset.tab).classList.add('active');
+        document.getElementById('tabTitleDisplay').textContent = tabTitles[tab.dataset.tab];
       });
     });
-
-    // Draw connections between nodes
     function drawConnections() {
       const svg = document.getElementById('connections');
       const diagram = document.getElementById('nodeDiagram');
-      
       const connections = [
-        { from: 'main', to: 'gameEngine' },
-        { from: 'main', to: 'network' },
-        { from: 'main', to: 'input' },
-        { from: 'main', to: 'battleManager' },
-        { from: 'main', to: 'battleRenderer' },
-        { from: 'main', to: 'virusTube' },
-        { from: 'main', to: 'uiController' },
-        { from: 'gameEngine', to: 'battleRenderer' },
-        { from: 'network', to: 'server' },
-        { from: 'battleManager', to: 'battleRenderer' },
-        { from: 'virusTube', to: 'network' },
-        { from: 'server', to: 'battleRoom' },
-        { from: 'battleRoom', to: 'schema' },
+        {from:'main',to:'gameEngine'},{from:'main',to:'network'},{from:'main',to:'input'},
+        {from:'main',to:'battleManager'},{from:'main',to:'battleRenderer'},{from:'main',to:'virusTube'},
+        {from:'gameEngine',to:'battleRenderer'},{from:'network',to:'server'},{from:'battleManager',to:'battleRenderer'},
+        {from:'virusTube',to:'network'},{from:'server',to:'battleRoom'},{from:'battleRoom',to:'schema'}
       ];
-
+      svg.innerHTML = '';
       connections.forEach(conn => {
-        const fromNode = document.querySelector(`[data-tooltip="${conn.from}"]`);
-        const toNode = document.querySelector(`[data-tooltip="${conn.to}"]`);
-        
-        if (fromNode && toNode) {
-          const fromRect = fromNode.getBoundingClientRect();
-          const toRect = toNode.getBoundingClientRect();
-          const diagramRect = diagram.getBoundingClientRect();
-          
-          const fromX = fromRect.left + fromRect.width / 2 - diagramRect.left;
-          const fromY = fromRect.top + fromRect.height / 2 - diagramRect.top;
-          const toX = toRect.left + toRect.width / 2 - diagramRect.left;
-          const toY = toRect.top + toRect.height / 2 - diagramRect.top;
-          
-          const length = Math.sqrt((toX - fromX) ** 2 + (toY - fromY) ** 2);
-          const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
-          
+        const from = document.querySelector(`[data-tooltip="${conn.from}"]`);
+        const to = document.querySelector(`[data-tooltip="${conn.to}"]`);
+        if (from && to) {
+          const f = from.getBoundingClientRect(), t = to.getBoundingClientRect(), d = diagram.getBoundingClientRect();
+          const fx = f.left + f.width/2 - d.left, fy = f.top + f.height/2 - d.top;
+          const tx = t.left + t.width/2 - d.left, ty = t.top + t.height/2 - d.top;
+          const len = Math.sqrt((tx-fx)**2 + (ty-fy)**2), ang = Math.atan2(ty-fy, tx-fx) * 180 / Math.PI;
           const line = document.createElement('div');
           line.className = 'connection';
-          line.style.width = length + 'px';
-          line.style.left = fromX + 'px';
-          line.style.top = fromY + 'px';
-          line.style.transform = `rotate(${angle}deg)`;
-          
+          line.style.width = len + 'px'; line.style.left = fx + 'px'; line.style.top = fy + 'px';
+          line.style.transform = `rotate(${ang}deg)`;
           svg.appendChild(line);
         }
       });
     }
-
-    // Tooltip functionality
     document.querySelectorAll('.node').forEach(node => {
-      node.addEventListener('mouseenter', (e) => {
-        const tooltip = document.getElementById('tooltip');
-        const title = document.getElementById('tooltip-title');
-        const content = document.getElementById('tooltip-content');
-        
-        const nodeTitle = node.querySelector('.node-title').textContent;
-        const nodeDesc = node.querySelector('.node-description').textContent;
-        const nodeMethods = node.querySelector('.node-methods').innerHTML;
-        
-        title.textContent = nodeTitle;
-        content.innerHTML = `<strong>${nodeDesc}</strong><br><br>${nodeMethods}`;
-        
-        tooltip.style.display = 'block';
-        tooltip.style.left = e.pageX + 10 + 'px';
-        tooltip.style.top = e.pageY + 10 + 'px';
+      node.addEventListener('mouseenter', e => {
+        const tt = document.getElementById('tooltip');
+        tt.querySelector('#tooltip-title').textContent = node.querySelector('.node-title').textContent;
+        tt.querySelector('#tooltip-content').innerHTML = node.querySelector('.node-description').innerHTML + '<br><br>' + (node.querySelector('.node-methods')?.innerHTML || '');
+        tt.style.display = 'block';
       });
-      
-      node.addEventListener('mousemove', (e) => {
-        const tooltip = document.getElementById('tooltip');
-        tooltip.style.left = e.pageX + 10 + 'px';
-        tooltip.style.top = e.pageY + 10 + 'px';
-      });
-      
-      node.addEventListener('mouseleave', () => {
-        document.getElementById('tooltip').style.display = 'none';
-      });
+      node.addEventListener('mousemove', e => { tt.style.left = e.pageX + 10 + 'px'; tt.style.top = e.pageY + 10 + 'px'; });
+      node.addEventListener('mouseleave', () => { document.getElementById('tooltip').style.display = 'none'; });
     });
-
-    // Zoom functionality
-    let currentZoom = 1;
-    
-    function zoomIn() {
-      currentZoom = Math.min(currentZoom + 0.2, 2);
-      document.getElementById('nodeDiagram').style.transform = `scale(${currentZoom})`;
-    }
-    
-    function zoomOut() {
-      currentZoom = Math.max(currentZoom - 0.2, 0.5);
-      document.getElementById('nodeDiagram').style.transform = `scale(${currentZoom})`;
-    }
-    
-    function resetZoom() {
-      currentZoom = 1;
-      document.getElementById('nodeDiagram').style.transform = `scale(1)`;
-    }
-
-    // Make nodes draggable
-    let draggedNode = null;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    document.querySelectorAll('.node').forEach(node => {
-      node.addEventListener('mousedown', (e) => {
-        draggedNode = node;
-        offsetX = e.clientX - node.offsetLeft;
-        offsetY = e.clientY - node.offsetTop;
-        node.style.zIndex = 100;
-      });
+    let zoom = 1;
+    function zoomIn() { zoom = Math.min(zoom + 0.2, 2); document.getElementById('nodeDiagram').style.transform = `scale(${zoom})`; }
+    function zoomOut() { zoom = Math.max(zoom - 0.2, 0.5); document.getElementById('nodeDiagram').style.transform = `scale(${zoom})`; }
+    function resetZoom() { zoom = 1; document.getElementById('nodeDiagram').style.transform = 'scale(1)'; }
+    let dragged = null, offX = 0, offY = 0;
+    document.querySelectorAll('.node').forEach(n => {
+      n.addEventListener('mousedown', e => { dragged = n; offX = e.clientX - n.offsetLeft; offY = e.clientY - n.offsetTop; n.style.zIndex = 100; });
     });
-
-    document.addEventListener('mousemove', (e) => {
-      if (draggedNode) {
-        draggedNode.style.left = (e.clientX - offsetX) + 'px';
-        draggedNode.style.top = (e.clientY - offsetY) + 'px';
-      }
-    });
-
-    document.addEventListener('mouseup', () => {
-      if (draggedNode) {
-        draggedNode.style.zIndex = 10;
-        draggedNode = null;
-        drawConnections(); // Redraw connections after drag
-      }
-    });
-
-    // Initialize
+    document.addEventListener('mousemove', e => { if (dragged) { dragged.style.left = (e.clientX - offX) + 'px'; dragged.style.top = (e.clientY - offY) + 'px'; } });
+    document.addEventListener('mouseup', () => { if (dragged) { dragged.style.zIndex = 10; dragged = null; drawConnections(); } });
     window.addEventListener('load', drawConnections);
   </script>
 </body>
