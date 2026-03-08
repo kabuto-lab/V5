@@ -15,78 +15,95 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
       color: #00ff00;
-      min-height: 100vh;
-      overflow-x: hidden;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .header {
-      background: linear-gradient(90deg, #ff00ff, #00ffff);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 15, 35, 0.85);
+      backdrop-filter: blur(10px);
       color: #0f0f23;
-      padding: 20px;
+      padding: 8px 20px;
       text-align: center;
-      box-shadow: 0 4px 20px rgba(0, 255, 255, 0.3);
+      z-index: 1000;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.3);
     }
 
     .header h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      font-size: 1.2rem;
+      margin: 0;
+      color: #00ffff;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
     }
 
     .header p {
-      font-size: 1.1rem;
-      opacity: 0.9;
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 2px;
+      color: #ff00ff;
     }
 
     .container {
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 20px;
+      width: 100vw;
+      height: 100vh;
+      padding: 50px 10px 10px;
+      overflow: hidden;
     }
 
     .section {
-      background: rgba(15, 15, 35, 0.8);
-      border: 2px solid #00ffff;
-      border-radius: 10px;
-      padding: 20px;
-      margin: 20px 0;
-      box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
+      box-shadow: none;
+      width: 100%;
+      height: calc(100vh - 50px);
     }
 
     .section h2 {
       color: #00ffff;
-      margin-bottom: 20px;
-      font-size: 1.8rem;
-      border-bottom: 2px solid #ff00ff;
-      padding-bottom: 10px;
+      margin: 0 0 10px 0;
+      font-size: 1rem;
+      border: none;
+      padding: 8px 15px;
+      background: rgba(0, 255, 255, 0.1);
+      border-radius: 5px;
     }
 
     /* Node-based diagram styles */
     .diagram-container {
       position: relative;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 10px;
-      padding: 40px;
-      min-height: 600px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      width: 100%;
+      height: calc(100vh - 120px);
       overflow: auto;
     }
 
     .node {
       position: absolute;
-      background: linear-gradient(135deg, #1a1a3e, #2a2a5e);
-      border: 3px solid;
-      border-radius: 10px;
-      padding: 15px;
-      min-width: 200px;
-      max-width: 300px;
+      background: rgba(26, 26, 62, 0.9);
+      border: 2px solid;
+      border-radius: 6px;
+      padding: 8px;
+      min-width: 140px;
+      max-width: 200px;
       cursor: move;
-      transition: transform 0.3s, box-shadow 0.3s;
+      transition: transform 0.2s, box-shadow 0.2s;
       z-index: 10;
     }
 
     .node:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 30px currentColor;
+      transform: scale(1.03);
+      box-shadow: 0 0 20px currentColor;
+      z-index: 100;
     }
 
     .node-core { border-color: #ff0066; color: #ff0066; }
@@ -97,37 +114,43 @@
 
     .node-title {
       font-weight: bold;
-      font-size: 1.1rem;
-      margin-bottom: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 5px;
       text-align: center;
     }
 
     .node-description {
-      font-size: 0.85rem;
-      opacity: 0.8;
-      line-height: 1.4;
+      font-size: 0.7rem;
+      opacity: 0.7;
+      line-height: 1.3;
     }
 
     .node-methods {
-      margin-top: 10px;
-      font-size: 0.8rem;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 8px;
-      border-radius: 5px;
+      margin-top: 6px;
+      font-size: 0.65rem;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 5px;
+      border-radius: 3px;
+      display: none;
+    }
+
+    .node:hover .node-methods {
+      display: block;
     }
 
     .node-methods h4 {
-      margin-bottom: 5px;
-      font-size: 0.85rem;
+      margin-bottom: 3px;
+      font-size: 0.65rem;
+      opacity: 0.8;
     }
 
     .node-methods ul {
       list-style: none;
-      padding-left: 5px;
+      padding-left: 3px;
     }
 
     .node-methods li {
-      padding: 2px 0;
+      padding: 1px 0;
     }
 
     .node-methods li::before {
@@ -167,64 +190,92 @@
     .legend {
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
-      margin-top: 20px;
-      padding: 15px;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      z-index: 100;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
+      font-size: 0.7rem;
     }
 
     .legend-color {
-      width: 30px;
-      height: 30px;
-      border-radius: 5px;
-      border: 3px solid;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 2px solid;
     }
 
     /* Flow chart */
     .flow-container {
       display: flex;
       flex-direction: column;
-      gap: 30px;
-      padding: 20px;
+      gap: 15px;
+      padding: 10px;
+      height: calc(100vh - 100px);
+      overflow: auto;
     }
 
     .flow-row {
       display: flex;
       justify-content: center;
-      gap: 40px;
+      gap: 20px;
       flex-wrap: wrap;
     }
 
     .flow-box {
-      background: linear-gradient(135deg, #1a1a3e, #2a2a5e);
-      border: 2px solid #00ffff;
-      border-radius: 8px;
-      padding: 15px;
-      min-width: 180px;
+      background: rgba(26, 26, 62, 0.9);
+      border: 1px solid #00ffff;
+      border-radius: 5px;
+      padding: 8px;
+      min-width: 140px;
       text-align: center;
       position: relative;
+      font-size: 0.75rem;
     }
 
     .flow-box::after {
       content: "↓";
       position: absolute;
-      bottom: -30px;
+      bottom: -18px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 2rem;
+      font-size: 1.2rem;
       color: #ff00ff;
       animation: pulse 1s infinite;
     }
 
     .flow-row:last-child .flow-box::after {
       display: none;
+    }
+
+    .flow-box strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #00ffff;
+    }
+
+    .flow-box small {
+      display: block;
+      opacity: 0.6;
+      margin-bottom: 3px;
+    }
+
+    .flow-box code {
+      display: block;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 0.65rem;
     }
 
     @keyframes pulse {
@@ -235,25 +286,26 @@
     /* Dependency tree */
     .tree {
       list-style: none;
-      padding-left: 20px;
+      padding-left: 15px;
+      font-size: 0.75rem;
     }
 
     .tree ul {
       list-style: none;
-      padding-left: 30px;
-      border-left: 2px dashed #00ffff;
+      padding-left: 20px;
+      border-left: 1px dashed rgba(0, 255, 255, 0.3);
     }
 
     .tree li {
       position: relative;
-      padding: 8px 0;
+      padding: 3px 0;
     }
 
     .tree li::before {
       content: "├─";
       position: absolute;
-      left: -20px;
-      color: #00ffff;
+      left: -15px;
+      color: rgba(0, 255, 255, 0.5);
     }
 
     .tree li:last-child::before {
@@ -262,41 +314,51 @@
 
     .tree-item {
       display: inline-block;
-      background: rgba(0, 255, 255, 0.1);
-      padding: 5px 10px;
-      border-radius: 5px;
-      border-left: 3px solid #00ffff;
+      background: rgba(0, 255, 255, 0.05);
+      padding: 3px 8px;
+      border-radius: 3px;
+      border-left: 2px solid #00ffff;
+      font-size: 0.7rem;
     }
 
     .tree-item.server {
       border-color: #ffaa00;
-      background: rgba(255, 170, 0, 0.1);
+      background: rgba(255, 170, 0, 0.05);
     }
 
     .tree-item.client {
       border-color: #00ff00;
-      background: rgba(0, 255, 0, 0.1);
+      background: rgba(0, 255, 0, 0.05);
     }
 
     /* Tabs */
     .tabs {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 5px;
+      margin-bottom: 10px;
+      padding: 0 10px;
     }
 
     .tab {
-      padding: 10px 20px;
-      background: rgba(0, 255, 255, 0.1);
-      border: 2px solid #00ffff;
-      border-radius: 5px;
+      padding: 6px 12px;
+      background: rgba(0, 255, 255, 0.05);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 4px;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s;
+      font-size: 0.8rem;
+      color: #00ffff;
     }
 
-    .tab:hover, .tab.active {
-      background: rgba(0, 255, 255, 0.3);
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    .tab:hover {
+      background: rgba(0, 255, 255, 0.15);
+      border-color: #00ffff;
+    }
+
+    .tab.active {
+      background: rgba(0, 255, 255, 0.2);
+      border-color: #00ffff;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
     }
 
     .tab-content {
@@ -310,80 +372,87 @@
     /* Stats */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
     }
 
     .stat-card {
-      background: linear-gradient(135deg, #1a1a3e, #2a2a5e);
-      border: 2px solid #ff00ff;
-      border-radius: 10px;
-      padding: 20px;
+      background: rgba(26, 26, 62, 0.8);
+      border: 1px solid #ff00ff;
+      border-radius: 5px;
+      padding: 10px;
       text-align: center;
     }
 
     .stat-number {
-      font-size: 2.5rem;
+      font-size: 1.5rem;
       font-weight: bold;
       color: #00ffff;
     }
 
     .stat-label {
-      font-size: 0.9rem;
-      opacity: 0.8;
-      margin-top: 5px;
+      font-size: 0.65rem;
+      opacity: 0.7;
+      margin-top: 3px;
     }
 
     /* Zoom controls */
     .zoom-controls {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 15px;
+      right: 15px;
       display: flex;
-      gap: 10px;
+      gap: 5px;
       z-index: 1000;
     }
 
     .zoom-btn {
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      background: #ff00ff;
+      background: rgba(255, 0, 255, 0.8);
       color: #0f0f23;
       border: none;
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(255, 0, 255, 0.5);
-      transition: transform 0.3s;
+      box-shadow: 0 2px 10px rgba(255, 0, 255, 0.5);
+      transition: transform 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .zoom-btn:hover {
-      transform: scale(1.2);
+      transform: scale(1.15);
+      background: rgba(255, 0, 255, 1);
     }
 
     /* Tooltip */
     .tooltip {
       position: fixed;
       background: rgba(0, 0, 0, 0.95);
-      border: 2px solid #00ffff;
-      border-radius: 8px;
-      padding: 15px;
-      max-width: 400px;
+      border: 1px solid #00ffff;
+      border-radius: 5px;
+      padding: 8px;
+      max-width: 300px;
       z-index: 10000;
       pointer-events: none;
       display: none;
-      box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      font-size: 0.7rem;
     }
 
     .tooltip h4 {
       color: #00ffff;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
+      font-size: 0.75rem;
     }
 
     .tooltip p {
-      font-size: 0.9rem;
-      line-height: 1.5;
+      font-size: 0.7rem;
+      line-height: 1.4;
+      opacity: 0.8;
     }
   </style>
 </head>
@@ -410,208 +479,183 @@
           <svg class="connections" id="connections"></svg>
           
           <!-- Core Nodes -->
-          <div class="node node-core" style="top: 50px; left: 50px;" data-tooltip="main">
+          <div class="node node-core" style="top: 30px; left: 30px;" data-tooltip="main">
             <div class="node-title">🎯 MainApp</div>
-            <div class="node-description">Точка входа приложения<br>Application Entry Point</div>
+            <div class="node-description">Точка входа<br>Entry Point</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
                 <li>constructor()</li>
                 <li>setupInteractions()</li>
                 <li>enterSandboxMode()</li>
-                <li>leaveSandboxMode()</li>
               </ul>
             </div>
           </div>
 
-          <div class="node node-core" style="top: 50px; left: 400px;" data-tooltip="gameEngine">
+          <div class="node node-core" style="top: 30px; left: 250px;" data-tooltip="gameEngine">
             <div class="node-title">⚙️ GameEngine</div>
-            <div class="node-description">PixiJS инициализация<br>PixiJS Initialization</div>
+            <div class="node-description">PixiJS инициализация</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
-                <li>init(containerId)</li>
+                <li>init()</li>
                 <li>start()</li>
-                <li>resize(w, h)</li>
+                <li>resize()</li>
               </ul>
             </div>
           </div>
 
-          <div class="node node-core" style="top: 50px; left: 750px;" data-tooltip="network">
-            <div class="node-title">🌐 NetworkManager</div>
-            <div class="node-description">Сетевое взаимодействие<br>Network Communication</div>
+          <div class="node node-core" style="top: 30px; left: 470px;" data-tooltip="network">
+            <div class="node-title">🌐 Network</div>
+            <div class="node-description">Сетевое взаимодействие</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
                 <li>connectToServer()</li>
-                <li>joinRoom(roomId)</li>
+                <li>joinRoom()</li>
                 <li>sendParameterUpdate()</li>
-                <li>sendToggleReady()</li>
               </ul>
             </div>
           </div>
 
-          <div class="node node-core" style="top: 50px; left: 1100px;" data-tooltip="input">
-            <div class="node-title">🖱️ InputManager</div>
-            <div class="node-description">Обработка ввода<br>Input Handling</div>
+          <div class="node node-core" style="top: 30px; left: 690px;" data-tooltip="input">
+            <div class="node-title">🖱️ Input</div>
+            <div class="node-description">Обработка ввода</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
                 <li>onMouseMove</li>
                 <li>onKeyDown</li>
-                <li>onKeyUp</li>
               </ul>
             </div>
           </div>
 
           <!-- Feature Nodes -->
-          <div class="node node-feature" style="top: 300px; left: 50px;" data-tooltip="battleManager">
-            <div class="node-title">⚔️ BattleManager</div>
-            <div class="node-description">Логика битвы<br>Battle Logic</div>
+          <div class="node node-feature" style="top: 200px; left: 30px;" data-tooltip="battleManager">
+            <div class="node-title">⚔️ BattleMgr</div>
+            <div class="node-description">Логика битвы</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
                 <li>startBattle()</li>
                 <li>spreadTick()</li>
-                <li>spreadVirus()</li>
-                <li>checkWinCondition()</li>
+                <li>checkWin()</li>
               </ul>
             </div>
           </div>
 
-          <div class="node node-feature" style="top: 300px; left: 400px;" data-tooltip="battleRenderer">
-            <div class="node-title">🎨 BattleRenderer</div>
-            <div class="node-description">Визуализация битвы<br>Battle Visualization</div>
+          <div class="node node-feature" style="top: 200px; left: 250px;" data-tooltip="battleRenderer">
+            <div class="node-title">🎨 Renderer</div>
+            <div class="node-description">Визуализация</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
-                <li>initGrid(w, h)</li>
-                <li>updateGrid(grid)</li>
-                <li>show() / hide()</li>
-                <li>onResize()</li>
+                <li>initGrid()</li>
+                <li>updateGrid()</li>
+                <li>show/hide()</li>
               </ul>
             </div>
           </div>
 
-          <div class="node node-feature" style="top: 300px; left: 750px;" data-tooltip="virusTube">
-            <div class="node-title">🧬 VirusTubeManager</div>
-            <div class="node-description">UI параметров вируса<br>Virus Parameter UI</div>
+          <div class="node node-feature" style="top: 200px; left: 470px;" data-tooltip="virusTube">
+            <div class="node-title">🧬 VirusTube</div>
+            <div class="node-description">UI параметров</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
-                <li>addPoint(param)</li>
-                <li>removePoint(param)</li>
-                <li>randomizeCurrentVirus()</li>
-                <li>updateDisplay()</li>
+                <li>addPoint()</li>
+                <li>removePoint()</li>
+                <li>randomize()</li>
               </ul>
             </div>
           </div>
 
-          <div class="node node-feature" style="top: 300px; left: 1100px;" data-tooltip="mouseFollower">
-            <div class="node-title">👆 MouseFollower</div>
-            <div class="node-description">Следование за мышью<br>Mouse Follower</div>
+          <div class="node node-feature" style="top: 200px; left: 690px;" data-tooltip="mouseFollower">
+            <div class="node-title">👆 Mouse</div>
+            <div class="node-description">Следование</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
-                <li>updateLocalPosition()</li>
+                <li>updatePos()</li>
                 <li>render()</li>
               </ul>
             </div>
           </div>
 
           <!-- UI Nodes -->
-          <div class="node node-ui" style="top: 550px; left: 200px;" data-tooltip="uiController">
-            <div class="node-title">🖼️ UIController</div>
-            <div class="node-description">Переключение экранов<br>Screen Switching</div>
+          <div class="node node-ui" style="top: 370px; left: 140px;" data-tooltip="uiController">
+            <div class="node-title">🖼️ UI Ctrl</div>
+            <div class="node-description">Экраны</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
-                <li>setView(view)</li>
-                <li>showScreen(id)</li>
-                <li>hideScreen(id)</li>
+                <li>setView()</li>
+                <li>showScreen()</li>
               </ul>
             </div>
           </div>
 
-          <div class="node node-ui" style="top: 550px; left: 550px;" data-tooltip="chat">
-            <div class="node-title">💬 ChatManager</div>
-            <div class="node-description">Чат для мультиплеера<br>Multiplayer Chat</div>
+          <div class="node node-ui" style="top: 370px; left: 360px;" data-tooltip="chat">
+            <div class="node-title">💬 Chat</div>
+            <div class="node-description">Чат</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
-                <li>sendMessage()</li>
-                <li>receiveMessage()</li>
+                <li>send()</li>
+                <li>receive()</li>
               </ul>
             </div>
           </div>
 
           <!-- Server Nodes -->
-          <div class="node node-server" style="top: 50px; left: 1450px;" data-tooltip="server">
-            <div class="node-title">🖥️ Server (index.ts)</div>
-            <div class="node-description">Серверная часть<br>Server-side</div>
+          <div class="node node-server" style="top: 30px; left: 910px;" data-tooltip="server">
+            <div class="node-title">🖥️ Server</div>
+            <div class="node-description">Сервер</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
-                <li>Express setup</li>
-                <li>Colyseus init</li>
-                <li>WebSocket start</li>
+                <li>Express</li>
+                <li>Colyseus</li>
+                <li>WebSocket</li>
               </ul>
             </div>
           </div>
 
-          <div class="node node-server" style="top: 300px; left: 1450px;" data-tooltip="battleRoom">
-            <div class="node-title">🏠 BattleRoom</div>
-            <div class="node-description">Логика комнаты<br>Room Logic</div>
+          <div class="node node-server" style="top: 200px; left: 910px;" data-tooltip="battleRoom">
+            <div class="node-title">🏠 Room</div>
+            <div class="node-description">Комната</div>
             <div class="node-methods">
-              <h4>Методы / Methods:</h4>
+              <h4>Методы:</h4>
               <ul>
                 <li>onCreate()</li>
                 <li>onJoin()</li>
                 <li>onLeave()</li>
-                <li>setSimulationInterval()</li>
               </ul>
             </div>
           </div>
 
-          <div class="node node-server" style="top: 550px; left: 1450px;" data-tooltip="schema">
+          <div class="node node-server" style="top: 370px; left: 910px;" data-tooltip="schema">
             <div class="node-title">📋 Schema</div>
-            <div class="node-description">Схема состояния<br>State Schema</div>
+            <div class="node-description">Схема</div>
             <div class="node-methods">
-              <h4>Поля / Fields:</h4>
+              <h4>Поля:</h4>
               <ul>
                 <li>players</li>
-                <li>battleGrid</li>
+                <li>grid</li>
                 <li>tick</li>
-                <li>state</li>
               </ul>
             </div>
           </div>
 
           <!-- Data Nodes -->
-          <div class="node node-data" style="top: 800px; left: 200px;" data-tooltip="gridConfig">
-            <div class="node-title">📐 GridConfig</div>
-            <div class="node-description">Конфигурация сетки<br>Grid Configuration</div>
-            <div class="node-methods">
-              <h4>Значения / Values:</h4>
-              <ul>
-                <li>GRID_WIDTH = 64</li>
-                <li>GRID_HEIGHT = 40</li>
-                <li>TOTAL = 2560</li>
-              </ul>
-            </div>
+          <div class="node node-data" style="top: 540px; left: 140px;" data-tooltip="gridConfig">
+            <div class="node-title">📐 Grid</div>
+            <div class="node-description">64×40=2560</div>
           </div>
 
-          <div class="node node-data" style="top: 800px; left: 550px;" data-tooltip="bioTypes">
-            <div class="node-title">🧬 BioTypes</div>
-            <div class="node-description">Типы данных битвы<br>Battle Data Types</div>
-            <div class="node-methods">
-              <h4>Типы / Types:</h4>
-              <ul>
-                <li>VirusParams</li>
-                <li>BattleState</li>
-                <li>BattleGridData</li>
-              </ul>
-            </div>
+          <div class="node node-data" style="top: 540px; left: 360px;" data-tooltip="bioTypes">
+            <div class="node-title">🧬 Types</div>
+            <div class="node-description">Данные</div>
           </div>
         </div>
 
