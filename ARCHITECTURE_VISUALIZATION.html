@@ -178,14 +178,13 @@
       height: 100%; 
       pointer-events: none; 
       z-index: 5; 
+      overflow: visible;
     }
-    .connection { 
-      position: absolute; 
-      height: 4px; 
-      background: var(--cp-cyan);
-      transform-origin: left center; 
-      box-shadow: 0 0 20px var(--cp-cyan), 0 0 40px var(--cp-cyan);
-      opacity: 1;
+    .connection-line { 
+      stroke: var(--cp-cyan);
+      stroke-width: 3;
+      filter: drop-shadow(0 0 10px var(--cp-cyan)) drop-shadow(0 0 20px var(--cp-cyan));
+      opacity: 0.8;
     }
     
     .legend {
@@ -298,7 +297,7 @@
     <!-- Tab 1: Node Diagram -->
     <div id="diagram" class="tab-content active">
       <div class="diagram-container" id="nodeDiagram">
-        <svg class="connections" id="connections"></svg>
+        <svg id="connections" width="100%" height="100%" style="position: absolute; top: 0; left: 0;"></svg>
         
         <div class="node node-core" style="top: 100px; left: 100px;" data-tooltip="main">
           <div class="node-title">🎯 MAIN_APP</div>
@@ -517,19 +516,32 @@
         {from:'gameEngine',to:'battleRenderer'},{from:'network',to:'server'},{from:'battleManager',to:'battleRenderer'},
         {from:'virusTube',to:'network'},{from:'server',to:'battleRoom'},{from:'battleRoom',to:'schema'}
       ];
-      svg.innerHTML = '';
+      
+      // Clear existing lines
+      while (svg.firstChild) {
+        svg.removeChild(svg.firstChild);
+      }
+      
       connections.forEach(conn => {
         const from = document.querySelector(`[data-tooltip="${conn.from}"]`);
         const to = document.querySelector(`[data-tooltip="${conn.to}"]`);
         if (from && to) {
-          const f = from.getBoundingClientRect(), t = to.getBoundingClientRect(), d = diagram.getBoundingClientRect();
-          const fx = f.left + f.width/2 - d.left, fy = f.top + f.height/2 - d.top;
-          const tx = t.left + t.width/2 - d.left, ty = t.top + t.height/2 - d.top;
-          const len = Math.sqrt((tx-fx)**2 + (ty-fy)**2), ang = Math.atan2(ty-fy, tx-fx) * 180 / Math.PI;
-          const line = document.createElement('div');
-          line.className = 'connection';
-          line.style.width = len + 'px'; line.style.left = fx + 'px'; line.style.top = fy + 'px';
-          line.style.transform = `rotate(${ang}deg)`;
+          const f = from.getBoundingClientRect();
+          const t = to.getBoundingClientRect();
+          const d = diagram.getBoundingClientRect();
+          
+          const x1 = f.left + f.width/2 - d.left;
+          const y1 = f.top + f.height/2 - d.top;
+          const x2 = t.left + t.width/2 - d.left;
+          const y2 = t.top + t.height/2 - d.top;
+          
+          // Create SVG line element
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', x1);
+          line.setAttribute('y1', y1);
+          line.setAttribute('x2', x2);
+          line.setAttribute('y2', y2);
+          line.setAttribute('class', 'connection-line');
           svg.appendChild(line);
         }
       });
