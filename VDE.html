@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISA - Live Blueprint Technical Specification</title>
+<style>
+:root {
+--cp-yellow: #fcee0a;
+--cp-red: #ff003c;
+--cp-cyan: #00f0ff;
+--cp-blue: #0044ff;
+--cp-dark: #0a0a0f;
+--cp-panel: #1a1a2e;
+--font-head: 'Orbitron', sans-serif;
+--font-body: 'Rajdhani', sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+background: var(--cp-dark);
+color: #ddd;
+font-family: var(--font-body);
+line-height: 1.6;
+padding: 40px;
+max-width: 1200px;
+margin: 0 auto;
+}
+h1, h2, h3 { font-family: var(--font-head); text-transform: uppercase; color: var(--cp-yellow); }
+h1 { font-size: 2.5rem; border-bottom: 3px solid var(--cp-cyan); padding-bottom: 20px; margin-bottom: 40px; text-shadow: 0 0 10px var(--cp-cyan); }
+h2 { font-size: 1.8rem; color: var(--cp-cyan); margin-top: 40px; border-left: 4px solid var(--cp-yellow); padding-left: 15px; }
+h3 { font-size: 1.3rem; color: var(--cp-red); margin-top: 25px; }
+p { margin-bottom: 15px; font-size: 1.1rem; }
+ul, ol { margin-left: 20px; margin-bottom: 20px; }
+li { margin-bottom: 8px; }
+code { background: rgba(0, 240, 255, 0.1); padding: 2px 6px; border: 1px solid var(--cp-cyan); color: var(--cp-cyan); font-family: 'Courier New', monospace; }
+pre { background: #050508; padding: 20px; border-left: 3px solid var(--cp-yellow); overflow-x: auto; color: #0f0; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: var(--cp-panel); }
+th, td { border: 1px solid #333; padding: 12px; text-align: left; }
+th { background: rgba(252, 238, 10, 0.1); color: var(--cp-yellow); }
+.tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; margin-right: 5px; }
+.tag-crit { background: var(--cp-red); color: #fff; }
+.tag-high { background: var(--cp-yellow); color: #000; }
+.tag-med { background: var(--cp-blue); color: #fff; }
+.section-box { background: rgba(255,255,255,0.03); padding: 20px; border: 1px solid #333; margin-bottom: 20px; }
+.highlight { color: var(--cp-yellow); font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>ISA: Live Blueprint Technical Specification</h1>
+<div class="section-box">
+<p><strong>Project Vision:</strong> Bidirectional Visual Development Environment (IDE + CMS/CRM).</p>
+<p><strong>Core Concept:</strong> "Wire Logic, Not Code." Connecting nodes modifies actual source files and runtime state instantly.</p>
+<p><strong>Current State:</strong> ViRU5 V5 (Static Visualization).</p>
+<p><strong>Target State:</strong> ISA (Interactive System Architecture) - Automated Crawling + Live Editing.</p>
+</div>
+
+<h2>1. Optimal Tech Stack</h2>
+<div class="section-box">
+<h3>Frontend (The Blueprint)</h3>
+<ul>
+<li><span class="tag tag-crit">Core</span> <strong>React 18 + TypeScript</strong> (Component ecosystem, type safety).</li>
+<li><span class="tag tag-crit">Canvas</span> <strong>PixiJS / React Pixi</strong> (High-performance node rendering, WebGL).</li>
+<li><span class="tag tag-high">Editor</span> <strong>Monaco Editor</strong> (VS Code engine for inline code editing).</li>
+<li><span class="tag tag-high">State</span> <strong>Zustand</strong> (Lightweight state management for complex graph data).</li>
+<li><span class="tag tag-med">Comms</span> <strong>Socket.io Client</strong> (Real-time sync with backend).</li>
+</ul>
+
+<h3>Backend (The Engine)</h3>
+<ul>
+<li><span class="tag tag-crit">Runtime</span> <strong>Node.js + Fastify</strong> (Low latency, JS ecosystem compatibility).</li>
+<li><span class="tag tag-crit">Parsing</span> <strong>TS-Morph / Babel / PostCSS</strong> (AST manipulation for safe code refactoring).</li>
+<li><span class="tag tag-high">DB</span> <strong>PostgreSQL + pgvector</strong> (Relational data + semantic search for code).</li>
+<li><span class="tag tag-high">Cache</span> <strong>Redis</strong> (Pub/Sub for multi-user collaboration).</li>
+<li><span class="tag tag-med">Sandbox</span> <strong>Docker / WebContainers</strong> (Isolated code execution & preview).</li>
+</ul>
+
+<h3>Infrastructure</h3>
+<ul>
+<li><span class="tag tag-med">Hosting</span> AWS Vercel (Frontend) + EC2/Fargate (Backend).</li>
+<li><span class="tag tag-med">VCS</span> GitHub API (Direct commit/push from blueprint).</li>
+</ul>
+</div>
+
+<h2>2. System Architecture</h2>
+<pre>
+┌──────────────┐      WebSocket      ┌──────────────┐
+│  CLIENT      │ ◄─────────────────► │  SERVER      │
+│  (Blueprint) │                     │  (Engine)    │
+├──────────────┤                     ├──────────────┤
+│ PixiJS Canvas│                     │ AST Parser   │
+│ Monaco Editor│                     │ File System  │
+│ State Store  │                     │ Git Manager  │
+└──────────────┘                     └──────────────┘
+       │                                     │
+       ▼                                     ▼
+┌──────────────┐                     ┌──────────────┐
+│  Preview     │                     │  Database    │
+│  (Iframe)    │                     │  (Postgres)  │
+└──────────────┘                     └──────────────┘
+</pre>
+<ul>
+<li><strong>Data Flow:</strong> User Drags Node → Frontend emits Event → Backend parses AST → Updates File → Git Commit → Hot Reload Preview.</li>
+<li><strong>Security:</strong> All code execution happens in ephemeral Docker containers. No direct host access.</li>
+</ul>
+
+<h2>3. Core Functionality Modules</h2>
+<div class="section-box">
+<h3>A. Visual Editor (The Canvas)</h3>
+<ul>
+<li><strong>Infinite Pan/Zoom:</strong> WebGL-based rendering for 10,000+ nodes.</li>
+<li><strong>Smart Wiring:</strong> Auto-snap connections based on type compatibility (e.g., CSS Node → HTML Element).</li>
+<li><strong>Context Menu:</strong> Right-click node to Refactor, Delete, Duplicate, or View Git History.</li>
+</ul>
+
+<h3>B. Bidirectional Sync (The Core)</h3>
+<ul>
+<li><strong>Code → Visual:</strong> File save triggers AST re-parse, updates graph automatically.</li>
+<li><strong>Visual → Code:</strong> Disconnecting a wire removes the <code>import</code> or <code>link</code> tag in source.</li>
+<li><strong>Live Preview:</strong> Changes reflect in embedded browser instantly (HMR).</li>
+</ul>
+
+<h3>C. CMS/CRM Layer (The Application)</h3>
+<ul>
+<li><strong>Data Nodes:</strong> Visual representation of Database Tables (SQL/NoSQL).</li>
+<li><strong>API Nodes:</strong> Visual endpoints (GET/POST) connected to Data Nodes.</li>
+<li><strong>User Mgmt:</strong> Visual role assignment (Admin → Can Edit Wire, User → Read Only).</li>
+</ul>
+</div>
+
+<h2>4. Development Roadmap (24 Weeks)</h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Duration</th>
+<th>Focus</th>
+<th>Deliverable</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0. Foundation</strong></td>
+<td>Done</td>
+<td>ViRU5 UI</td>
+<td>Static Cyberpunk Diagram</td>
+<td><span class="tag tag-crit">DONE</span></td>
+</tr>
+<tr>
+<td><strong>1. Parser Engine</strong></td>
+<td>4 Weeks</td>
+<td>AST Analysis</td>
+<td>Upload Repo → Generate Graph</td>
+<td><span class="tag tag-crit">CRITICAL</span></td>
+</tr>
+<tr>
+<td><strong>2. Bidirectional Sync</strong></td>
+<td>6 Weeks</td>
+<td>Read/Write</td>
+<td>Edit Node → Update File</td>
+<td><span class="tag tag-crit">CRITICAL</span></td>
+</tr>
+<tr>
+<td><strong>3. Live Preview</strong></td>
+<td>4 Weeks</td>
+<td>Sandboxing</td>
+<td>Embedded Browser w/ HMR</td>
+<td><span class="tag tag-high">HIGH</span></td>
+</tr>
+<tr>
+<td><strong>4. CMS/CRM Modules</strong></td>
+<td>6 Weeks</td>
+<td>Data/API</td>
+<td>DB Visualizer + API Builder</td>
+<td><span class="tag tag-high">HIGH</span></td>
+</tr>
+<tr>
+<td><strong>5. Collaboration</strong></td>
+<td>4 Weeks</td>
+<td>Multiplayer</td>
+<td>Cursors, Comments, Git Push</td>
+<td><span class="tag tag-med">MEDIUM</span></td>
+</tr>
+</tbody>
+</table>
+
+<h2>5. Technical Risks & Mitigation</h2>
+<ul>
+<li><strong>AST Complexity:</strong> Parsing dynamic JS can fail. <em>Mitigation:</em> Use TypeScript strict mode where possible; fallback to regex for unknown patterns.</li>
+<li><strong>Performance:</strong> 10k nodes lagging. <em>Mitigation:</em> Level-of-Detail (LOD) rendering in PixiJS; virtualize DOM.</li>
+<li><strong>Security:</strong> User code execution. <em>Mitigation:</em> Strict Docker sandboxing; no network access from sandbox except via proxy.</li>
+<li><strong>State Sync:</strong> Conflict when two users edit same node. <em>Mitigation:</em> Operational Transformation (OT) or Yjs for CRDT sync.</li>
+</ul>
+
+<h2>6. Success Metrics</h2>
+<ul>
+<li><strong>Parse Speed:</strong> &lt;30s for 10k file repository.</li>
+<li><strong>Sync Latency:</strong> &lt;100ms from Wire Change to Preview Update.</li>
+<li><strong>Accuracy:</strong> 95%+ import/connection detection rate.</li>
+<li><strong>Stability:</strong> Zero data loss on disconnect (auto-save every 5s).</li>
+</ul>
+
+<h2>7. Immediate Next Steps</h2>
+<ol>
+<li>Initialize Repo with <strong>React + PixiJS + Node</strong> monorepo.</li>
+<li>Build <strong>AST Parser Service</strong> (Input: File Path → Output: JSON Graph).</li>
+<li>Implement <strong>WebSocket Sync</strong> between Parser and Canvas.</li>
+<li>Refine UI to match <strong>ViRU5 V5</strong> cyberpunk aesthetic.</li>
+</ol>
+
+</body>
+</html>

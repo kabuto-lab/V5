@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViRU5 V5 - ARCHITECTURE</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --cp-yellow: #fcee0a;
+      --cp-red: #ff003c;
+      --cp-cyan: #00f0ff;
+      --cp-blue: #0044ff;
+      --cp-dark: #0a0a0f;
+    }
+    
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: linear-gradient(180deg, #050508 0%, #0a0a0f 50%, #1a1a2e 100%);
+      color: var(--cp-yellow);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    
+    .header {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: linear-gradient(90deg, rgba(252, 238, 10, 0.15), rgba(0, 0, 0, 0.9));
+      padding: 15px 30px;
+      clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+      border-left: 3px solid var(--cp-yellow);
+      box-shadow: 0 0 30px rgba(252, 238, 10, 0.3);
+    }
+    
+    .header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--cp-yellow);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      text-shadow: 0 0 10px var(--cp-yellow);
+    }
+    
+    .header p {
+      font-size: 0.7rem;
+      color: var(--cp-cyan);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-top: 1px solid var(--cp-cyan);
+      padding-top: 5px;
+      margin-top: 5px;
+    }
+    
+    .tab-circles { display: flex; gap: 10px; }
+    
+    .tab-circle {
+      width: 45px; height: 45px; border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid var(--cp-cyan);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; color: var(--cp-cyan);
+    }
+    
+    .tab-circle:hover {
+      border-color: var(--cp-yellow);
+      color: var(--cp-yellow);
+      box-shadow: 0 0 20px rgba(252, 238, 10, 0.5);
+      transform: scale(1.1);
+    }
+    
+    .tab-circle.active {
+      background: rgba(252, 238, 10, 0.2);
+      border-color: var(--cp-yellow);
+      color: var(--cp-yellow);
+      box-shadow: 0 0 30px rgba(252, 238, 10, 0.6);
+    }
+    
+    .tab-title-display {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      color: var(--cp-cyan);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      min-width: 180px;
+      border-left: 2px solid var(--cp-cyan);
+      padding-left: 20px;
+    }
+    
+    .container { width: 100vw; height: 100vh; overflow: hidden; }
+    .tab-content { display: none; width: 100%; height: 100%; }
+    .tab-content.active { display: block; }
+    
+    .diagram-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      background: 
+        linear-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.08) 1px, transparent 1px);
+      background-size: 50px 50px;
+      overflow: auto;
+      transform-origin: center center;
+      transition: transform 0.2s ease;
+    }
+    
+    .node {
+      position: absolute;
+      background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+      border: 3px solid;
+      padding: 15px;
+      min-width: 200px;
+      cursor: move;
+      z-index: 10;
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
+      box-shadow: 0 0 25px currentColor;
+      user-select: none;
+    }
+    
+    .node:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 40px currentColor;
+      z-index: 100;
+    }
+    
+    .node-core { border-color: var(--cp-red); color: var(--cp-red); }
+    .node-feature { border-color: var(--cp-cyan); color: var(--cp-cyan); }
+    .node-ui { border-color: var(--cp-yellow); color: var(--cp-yellow); }
+    .node-server { border-color: var(--cp-blue); color: var(--cp-blue); }
+    .node-data { border-color: #ff00ff; color: #ff00ff; }
+    
+    .node-title {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      text-align: center;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    
+    .node-description {
+      font-size: 0.8rem;
+      text-align: center;
+      color: #ddd;
+      line-height: 1.6;
+    }
+    
+    .node-methods {
+      margin-top: 12px;
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px;
+      border-left: 3px solid;
+      display: none;
+      color: #fff;
+    }
+    
+    .node:hover .node-methods { display: block; }
+    .node-methods h4 { margin-bottom: 8px; color: var(--cp-cyan); text-transform: uppercase; }
+    .node-methods ul { list-style: none; padding-left: 5px; }
+    .node-methods li::before { content: "► "; }
+    
+    .connections { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      pointer-events: none; 
+      z-index: 5; 
+      overflow: visible;
+    }
+    .connection-line { 
+      fill: none;
+      stroke: var(--cp-cyan);
+      stroke-width: 3;
+      filter: drop-shadow(0 0 10px var(--cp-cyan)) drop-shadow(0 0 20px var(--cp-cyan));
+      opacity: 0.8;
+    }
+    
+    .legend {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      gap: 15px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid var(--cp-cyan);
+      z-index: 1000;
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
+    }
+    
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; text-transform: uppercase; }
+    .legend-color { width: 20px; height: 20px; border: 2px solid; transform: rotate(45deg); }
+    
+    .zoom-controls { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 10px; z-index: 1000; }
+    .zoom-btn {
+      width: 45px; height: 45px;
+      background: rgba(252, 238, 10, 0.2);
+      color: var(--cp-yellow);
+      border: 2px solid var(--cp-yellow);
+      font-size: 1.5rem;
+      cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .zoom-btn:hover { background: rgba(252, 238, 10, 0.4); transform: scale(1.1); }
+    
+    .tooltip {
+      position: fixed;
+      background: rgba(0, 0, 0, 0.95);
+      border: 2px solid var(--cp-cyan);
+      padding: 15px;
+      max-width: 350px;
+      z-index: 10000;
+      pointer-events: none;
+      display: none;
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+    }
+    .tooltip h4 { color: var(--cp-cyan); margin-bottom: 10px; font-family: 'Orbitron', sans-serif; }
+    .tooltip p { line-height: 1.5; color: #ddd; }
+    
+    /* Code Panel */
+    .code-panel {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      width: 450px;
+      max-height: calc(100vh - 140px);
+      background: rgba(5, 5, 10, 0.95);
+      border: 2px solid var(--cp-yellow);
+      border-left: 4px solid var(--cp-yellow);
+      z-index: 10001;
+      display: none;
+      flex-direction: column;
+      clip-path: polygon(0 0, 100% 0, 100% 95%, 95% 100%, 0 100%);
+      box-shadow: -10px 10px 40px rgba(252, 238, 10, 0.3);
+    }
+    
+    .code-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: linear-gradient(90deg, rgba(252, 238, 10, 0.2), transparent);
+      border-bottom: 1px solid var(--cp-yellow);
+    }
+    
+    .code-panel-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      color: var(--cp-yellow);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .code-panel-close {
+      background: transparent;
+      border: 2px solid var(--cp-red);
+      color: var(--cp-red);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    
+    .code-panel-close:hover {
+      background: var(--cp-red);
+      color: #000;
+      box-shadow: 0 0 20px var(--cp-red);
+    }
+    
+    .code-panel-content {
+      padding: 20px;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+    
+    .code-panel-content pre {
+      background: rgba(0, 0, 0, 0.8);
+      border-left: 3px solid var(--cp-cyan);
+      padding: 15px;
+      overflow-x: auto;
+      color: #0f0;
+      font-size: 0.75rem;
+      font-family: 'Courier New', monospace;
+      line-height: 1.6;
+    }
+    
+    .code-panel-content h4 {
+      color: var(--cp-cyan);
+      margin-bottom: 15px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+    
+    .code-panel-info {
+      padding: 15px 20px;
+      border-top: 1px solid rgba(0, 240, 255, 0.3);
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+    
+    .code-panel-info strong { color: var(--cp-yellow); }
+    
+    /* Flow styles */
+    .flow-container { display: flex; flex-direction: column; gap: 30px; padding: 100px 40px 40px; height: 100vh; overflow: auto; }
+    .flow-row { display: flex; justify-content: center; gap: 40px; }
+    .flow-box {
+      background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+      border: 3px solid var(--cp-cyan);
+      padding: 20px 30px;
+      min-width: 220px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 0 25px var(--cp-cyan);
+    }
+    .flow-box::after {
+      content: "▼"; position: absolute; bottom: -35px; left: 50%;
+      transform: translateX(-50%); font-size: 1.5rem; color: var(--cp-red);
+    }
+    .flow-row:last-child .flow-box::after { display: none; }
+    .flow-box strong { display: block; margin-bottom: 10px; color: var(--cp-cyan); font-family: 'Orbitron', sans-serif; }
+    .flow-box small { display: block; opacity: 0.7; margin-bottom: 10px; }
+    .flow-box code { display: block; background: rgba(0, 240, 255, 0.1); padding: 8px; border-left: 3px solid var(--cp-cyan); font-size: 0.75rem; }
+    
+    /* Tree styles */
+    .tree-container { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; padding: 100px 60px 40px; height: 100vh; overflow: auto; }
+    .tree { list-style: none; }
+    .tree h3 { color: var(--cp-yellow); margin-bottom: 25px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; border-bottom: 2px solid var(--cp-yellow); padding-bottom: 10px; }
+    .tree ul { list-style: none; padding-left: 25px; border-left: 2px dashed var(--cp-cyan); }
+    .tree li { position: relative; padding: 10px 0; }
+    .tree li::before { content: "├─"; position: absolute; left: -20px; color: var(--cp-cyan); }
+    .tree li:last-child::before { content: "└─"; }
+    .tree-item { display: inline-block; background: rgba(0, 240, 255, 0.1); padding: 6px 15px; border-left: 3px solid var(--cp-cyan); font-family: 'Orbitron', sans-serif; font-size: 0.85rem; }
+    .tree-item.server { border-color: var(--cp-blue); background: rgba(0, 68, 255, 0.1); }
+    .tree-item.client { border-color: var(--cp-yellow); background: rgba(252, 238, 10, 0.1); }
+    
+    /* Stats styles */
+    .stats-container { padding: 100px 60px 40px; height: 100vh; overflow: auto; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; margin-top: 30px; }
+    .stat-card {
+      background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+      border: 3px solid var(--cp-red);
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 0 25px var(--cp-red);
+    }
+    .stat-number { font-family: 'Orbitron', sans-serif; font-size: 3rem; font-weight: 900; color: var(--cp-cyan); text-shadow: 0 0 20px var(--cp-cyan); }
+    .stat-label { font-size: 0.85rem; opacity: 0.8; margin-top: 15px; text-transform: uppercase; letter-spacing: 2px; }
+    .stats-container h3 { color: var(--cp-cyan); margin-top: 40px; font-family: 'Orbitron', sans-serif; font-size: 1.3rem; }
+    .stats-container pre { background: rgba(0, 0, 0, 0.8); padding: 25px; border-left: 4px solid var(--cp-yellow); overflow-x: auto; color: var(--cp-yellow); font-size: 0.85rem; margin-top: 20px; font-family: 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>ViRU5 V5</h1>
+      <p>System Architecture // NETRUNNER INTERFACE</p>
+    </div>
+    <div class="tab-circles">
+      <div class="tab-circle active" data-tab="diagram" title="NODE MAP">📊</div>
+      <div class="tab-circle" data-tab="flow" title="DATA FLOW">🔄</div>
+      <div class="tab-circle" data-tab="dependency" title="NET LINKS">🌳</div>
+      <div class="tab-circle" data-tab="stats" title="SYSTEM STATS">📈</div>
+    </div>
+    <div class="tab-title-display" id="tabTitleDisplay">NODE MAP</div>
+  </div>
+
+  <div class="container">
+    <!-- Tab 1: Node Diagram -->
+    <div id="diagram" class="tab-content active">
+      <div class="diagram-container" id="nodeDiagram">
+        <svg id="connections" class="connections" width="2000" height="1200">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#00f0ff" />
+            </marker>
+          </defs>
+        </svg>
+        
+        <div class="node node-core" style="top: 100px; left: 100px;" data-tooltip="main" id="node-main">
+          <div class="node-title">🎯 MAIN_APP</div>
+          <div class="node-description">ENTRY POINT<br>CORE SYSTEM</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>constructor()</li><li>setupInteractions()</li><li>enterSandbox()</li></ul></div>
+        </div>
+        
+        <div class="node node-core" style="top: 100px; left: 400px;" data-tooltip="gameEngine" id="node-gameEngine">
+          <div class="node-title">⚙️ GAME_ENGINE</div>
+          <div class="node-description">PIXI JS CORE<br>RENDERER</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>init()</li><li>start()</li><li>resize()</li></ul></div>
+        </div>
+        
+        <div class="node node-core" style="top: 100px; left: 700px;" data-tooltip="network" id="node-network">
+          <div class="node-title">🌐 NETWORK</div>
+          <div class="node-description">COLYSEUS LINK<br>MULTIPLAYER</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>connect()</li><li>joinRoom()</li><li>send()</li></ul></div>
+        </div>
+        
+        <div class="node node-core" style="top: 100px; left: 1000px;" data-tooltip="input" id="node-input">
+          <div class="node-title">🖱️ INPUT_MGR</div>
+          <div class="node-description">MOUSE / KB<br>INPUT HANDLER</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>onMouse</li><li>onKey</li></ul></div>
+        </div>
+        
+        <div class="node node-feature" style="top: 350px; left: 100px;" data-tooltip="battleManager" id="node-battleManager">
+          <div class="node-title">⚔️ BATTLE_MGR</div>
+          <div class="node-description">COMBAT LOGIC<br>SIMULATION</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>startBattle()</li><li>spreadTick()</li><li>checkWin()</li></ul></div>
+        </div>
+        
+        <div class="node node-feature" style="top: 350px; left: 400px;" data-tooltip="battleRenderer" id="node-battleRenderer">
+          <div class="node-title">🎨 RENDERER</div>
+          <div class="node-description">VISUALIZATION<br>WEBGL DRAW</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>initGrid()</li><li>updateGrid()</li></ul></div>
+        </div>
+        
+        <div class="node node-feature" style="top: 350px; left: 700px;" data-tooltip="virusTube" id="node-virusTube">
+          <div class="node-title">🧬 VIRUS_TUBE</div>
+          <div class="node-description">PARAM UI<br>12 POINTS</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>addPoint()</li><li>randomize()</li></ul></div>
+        </div>
+        
+        <div class="node node-feature" style="top: 350px; left: 1000px;" data-tooltip="mouseFollower" id="node-mouseFollower">
+          <div class="node-title">👆 MOUSE_FLW</div>
+          <div class="node-description">CURSOR TRACK<br>FOLLOWER</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>updatePos()</li></ul></div>
+        </div>
+        
+        <div class="node node-ui" style="top: 600px; left: 250px;" data-tooltip="uiController" id="node-uiController">
+          <div class="node-title">🖼️ UI_CTRL</div>
+          <div class="node-description">SCREEN MGR<br>VIEW SWITCH</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>setView()</li><li>show()</li></ul></div>
+        </div>
+        
+        <div class="node node-ui" style="top: 600px; left: 550px;" data-tooltip="chat" id="node-chat">
+          <div class="node-title">💬 CHAT_SYS</div>
+          <div class="node-description">MSG SYSTEM<br>NETWORK CHAT</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>send()</li><li>recv()</li></ul></div>
+        </div>
+        
+        <div class="node node-server" style="top: 100px; left: 1300px;" data-tooltip="server" id="node-server">
+          <div class="node-title">🖥️ SERVER</div>
+          <div class="node-description">NODE JS<br>EXPRESS + COLYSEUS</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>Express</li><li>Colyseus</li><li>WS</li></ul></div>
+        </div>
+        
+        <div class="node node-server" style="top: 350px; left: 1300px;" data-tooltip="battleRoom" id="node-battleRoom">
+          <div class="node-title">🏠 BATTLE_ROOM</div>
+          <div class="node-description">GAME ROOM<br>STATE SYNC</div>
+          <div class="node-methods"><h4>FUNCTIONS</h4><ul><li>onCreate()</li><li>onJoin()</li><li>onLeave()</li></ul></div>
+        </div>
+        
+        <div class="node node-server" style="top: 600px; left: 1300px;" data-tooltip="schema" id="node-schema">
+          <div class="node-title">📋 SCHEMA</div>
+          <div class="node-description">STATE DEF<br>DATA STRUCT</div>
+          <div class="node-methods"><h4>FIELDS</h4><ul><li>players</li><li>grid</li><li>tick</li></ul></div>
+        </div>
+        
+        <div class="node node-data" style="top: 850px; left: 250px;" data-tooltip="gridConfig" id="node-gridConfig">
+          <div class="node-title">📐 GRID_CFG</div>
+          <div class="node-description">64 × 40<br>2560 CELLS</div>
+        </div>
+        
+        <div class="node node-data" style="top: 850px; left: 550px;" data-tooltip="types" id="node-types">
+          <div class="node-title">🧬 TYPES</div>
+          <div class="node-description">TS INTERFACES<br>DATA TYPES</div>
+        </div>
+        
+        <div class="legend">
+          <div class="legend-item"><div class="legend-color" style="border-color:var(--cp-red)"></div>CORE</div>
+          <div class="legend-item"><div class="legend-color" style="border-color:var(--cp-cyan)"></div>FEATURES</div>
+          <div class="legend-item"><div class="legend-color" style="border-color:var(--cp-yellow)"></div>UI</div>
+          <div class="legend-item"><div class="legend-color" style="border-color:var(--cp-blue)"></div>SERVER</div>
+          <div class="legend-item"><div class="legend-color" style="border-color:#ff00ff"></div>DATA</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Data Flow -->
+    <div id="flow" class="tab-content">
+      <div class="flow-container">
+        <div class="flow-row"><div class="flow-box"><strong>CONFIGURE VIRUSES</strong><small>Player Input</small><code>VirusTubeManager</code></div></div>
+        <div class="flow-row"><div class="flow-box"><strong>INITIATE COMBAT</strong><small>START BATTLE</small><code>Button Event</code></div></div>
+        <div class="flow-row"><div class="flow-box"><strong>BATTLE_MGR.START()</strong><small>Grid 64×40</small><code>2560 cells</code></div></div>
+        <div class="flow-row"><div class="flow-box"><strong>SPREAD_TICK()</strong><small>500ms Interval</small><code>Simulation Loop</code></div></div>
+        <div class="flow-row"><div class="flow-box"><strong>RENDERER.UPDATE()</strong><small>PixiJS Draw</small><code>WebGL</code></div></div>
+        <div class="flow-row"><div class="flow-box"><strong>VICTORY_CHECK</strong><small>96% Control</small><code>Win Condition</code></div></div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Dependencies -->
+    <div id="dependency" class="tab-content">
+      <div class="tree-container">
+        <div class="tree">
+          <h3>📦 CLIENT_DEPS</h3>
+          <ul>
+            <li><span class="tree-item client">MAIN_TS</span>
+              <ul>
+                <li><span class="tree-item client">GAME_ENGINE_TS</span></li>
+                <li><span class="tree-item client">NETWORK_MGR_TS</span>
+                  <ul><li><span class="tree-item client">COLYSEUS_JS</span></li></ul>
+                </li>
+                <li><span class="tree-item client">INPUT_MGR_TS</span></li>
+                <li><span class="tree-item client">UI_CTRL_TS</span></li>
+                <li><span class="tree-item client">BATTLE_MGR_TS</span></li>
+                <li><span class="tree-item client">BATTLE_RENDERER_TS</span>
+                  <ul><li><span class="tree-item client">PIXI_JS</span></li></ul>
+                </li>
+                <li><span class="tree-item client">VIRUS_TUBE_TS</span></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="tree">
+          <h3>🖥️ SERVER_DEPS</h3>
+          <ul>
+            <li><span class="tree-item server">INDEX_TS</span>
+              <ul>
+                <li><span class="tree-item server">EXPRESS</span></li>
+                <li><span class="tree-item server">COLYSEUS</span></li>
+                <li><span class="tree-item server">CORS</span></li>
+              </ul>
+            </li>
+            <li><span class="tree-item server">BATTLE_ROOM_TS</span>
+              <ul><li><span class="tree-item server">SCHEMA_TS</span></li></ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Stats -->
+    <div id="stats" class="tab-content">
+      <div class="stats-container">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-number">10</div><div class="stat-label">CORE MODULES</div></div>
+          <div class="stat-card"><div class="stat-number">64×40</div><div class="stat-label">GRID MATRIX</div></div>
+          <div class="stat-card"><div class="stat-number">2560</div><div class="stat-label">TOTAL CELLS</div></div>
+          <div class="stat-card"><div class="stat-number">12</div><div class="stat-label">VIRUS PARAMS</div></div>
+          <div class="stat-card"><div class="stat-number">500MS</div><div class="stat-label">TICK CYCLE</div></div>
+          <div class="stat-card"><div class="stat-number">60</div><div class="stat-label">TARGET FPS</div></div>
+          <div class="stat-card"><div class="stat-number">4</div><div class="stat-label">VIRUS MODES</div></div>
+          <div class="stat-card"><div class="stat-number">96%</div><div class="stat-label">WIN THRESHOLD</div></div>
+        </div>
+        <h3>📁 FILE_STRUCTURE</h3>
+        <pre>V5_SYSTEM/
+├── CLIENT_NET/
+│   └── SRC/
+│       ├── MAIN_TS              # ENTRY_POINT
+│       ├── CORE/
+│       │   ├── GAME_ENGINE_TS   # PIXI_RENDERER
+│       │   ├── NETWORK_MGR_TS   # COLYSEUS_CLIENT
+│       │   └── INPUT_MGR_TS     # MOUSE_KB_HANDLER
+│       ├── FEATURES_BATTLE/
+│       │   ├── BATTLE_MGR_TS    # COMBAT_LOGIC
+│       │   ├── BATTLE_RENDERER_TS # VISUALIZATION
+│       │   └── VIRUS_TUBE_TS    # PARAM_UI
+│       └── UI/
+│           └── UI_CTRL_TS       # SCREEN_MANAGER
+└── SERVER_NET/
+    ├── INDEX_TS                 # SERVER_ENTRY
+    └── ROOMS/
+        ├── SCHEMA_TS            # STATE_DEF
+        └── BATTLE_ROOM_TS       # ROOM_LOGIC</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="zoom-controls">
+    <button class="zoom-btn" onclick="zoomIn()">+</button>
+    <button class="zoom-btn" onclick="zoomOut()">−</button>
+    <button class="zoom-btn" onclick="resetZoom()">RST</button>
+  </div>
+
+  <div class="tooltip" id="tooltip"><h4 id="tooltip-title"></h4><p id="tooltip-content"></p></div>
+  
+  <!-- Code Panel -->
+  <div class="code-panel" id="codePanel">
+    <div class="code-panel-header">
+      <span class="code-panel-title" id="codePanelTitle">📄 CODE VIEW</span>
+      <button class="code-panel-close" onclick="closeCodePanel()">×</button>
+    </div>
+    <div class="code-panel-content">
+      <h4 id="codePanelSubtitle">FILE: </h4>
+      <pre id="codePanelCode">// Select a node to view its code</pre>
+    </div>
+    <div class="code-panel-info">
+      <strong>💡 Tip:</strong> Click any node to view its source code
+    </div>
+  </div>
+
+  <script>
+    // Tab titles mapping
+    const tabTitles = {
+      diagram: 'NODE MAP',
+      flow: 'DATA FLOW',
+      dependency: 'NET LINKS',
+      stats: 'SYSTEM STATS'
+    };
+
+    // Code database - actual code snippets from project files
+    const codeDatabase = {
+      main: {
+        file: 'client/src/main.ts',
+        code: `class MainApp {
+  constructor() {
+    this.gameEngine = new GameEngine();
+    this.networkManager = new NetworkManager();
+    this.inputManager = new InputManager();
+    this.uiController = new UIController();
+    this.virusTubeManager = new VirusTubeManager('sandbox', 'red');
+    this.battleManager = new BattleManager();
+    this.setupInteractions();
+  }
+  
+  setupInteractions(): void {
+    this.virusTubeManager.setOnParamsChange((params) => {
+      this.networkManager.sendParameterUpdate(params);
+    });
+    this.battleManager.setOnGridUpdate((grid) => {
+      if (this.battleRenderer) {
+        this.battleRenderer.updateGrid(grid);
+      }
+    });
+  }
+}`
+      },
+      gameEngine: {
+        file: 'client/src/core/GameEngine.ts',
+        code: `class GameEngine {
+  public app: PIXI.Application | null = null;
+  
+  async init(containerId: string): Promise<void> {
+    this.app = new PIXI.Application({
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: 0x0f0f23,
+      resolution: window.devicePixelRatio || 1,
+      autoDensity: true
+    });
+    
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.appendChild(this.app.view as HTMLCanvasElement);
+    }
+  }
+  
+  start(): void {
+    if (this.app) {
+      this.app.start();
+    }
+  }
+}`
+      },
+      network: {
+        file: 'client/src/core/NetworkManager.ts',
+        code: `class NetworkManager {
+  private client: ColyseusClient;
+  
+  async connectToServer(url: string): Promise<void> {
+    this.client = new ColyseusClient(url);
+  }
+  
+  async joinRoom(roomId: string): Promise<void> {
+    const room = await this.client.joinById(roomId);
+    room.onStateChange((state) => {
+      console.log('Room state changed:', state);
+    });
+  }
+  
+  sendParameterUpdate(params: VirusParams): void {
+    if (this.room) {
+      this.room.send('updateParams', params);
+    }
+  }
+}`
+      },
+      input: {
+        file: 'client/src/core/InputManager.ts',
+        code: `class InputManager {
+  public onMouseMove?: (x: number, y: number) => void;
+  public onKeyDown?: (key: string) => void;
+  
+  constructor() {
+    window.addEventListener('mousemove', (e) => {
+      if (this.onMouseMove) {
+        this.onMouseMove(e.clientX, e.clientY);
+      }
+    });
+    
+    window.addEventListener('keydown', (e) => {
+      if (this.onKeyDown) {
+        this.onKeyDown(e.key);
+      }
+    });
+  }
+}`
+      },
+      battleManager: {
+        file: 'client/src/features/battle/BattleManager.ts',
+        code: `class BattleManager {
+  private state: BattleState = { type: 'idle' };
+  private gridData: BattleGridData | null = null;
+  private spreadInterval: number | null = null;
+  
+  startBattle(grid: number[], width: number, height: number): void {
+    this.gridData = { grid: [...grid], width, height };
+    this.state = { type: 'running', startTime: Date.now(), tick: 0 };
+    this.startSpreadCycle();
+  }
+  
+  private startSpreadCycle(): void {
+    this.spreadInterval = window.setInterval(() => {
+      this.spreadTick();
+    }, 500); // 2 ticks per second
+  }
+  
+  private spreadTick(): void {
+    // Spread logic here
+    this.checkWinCondition();
+  }
+}`
+      },
+      battleRenderer: {
+        file: 'client/src/features/battle/BattleRenderer.ts',
+        code: `class BattleRenderer {
+  public container: PIXI.Container;
+  private cellSprites: PIXI.Sprite[] = [];
+  
+  initGrid(width: number, height: number): void {
+    this.gridWidth = width;
+    this.gridHeight = height;
+    this.totalCells = width * height;
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const sprite = new PIXI.Sprite(this.baseTexture);
+        sprite.width = cellWidth;
+        sprite.height = cellHeight;
+        this.container.addChild(sprite);
+        this.cellSprites.push(sprite);
+      }
+    }
+  }
+}`
+      },
+      virusTube: {
+        file: 'client/src/features/battle/VirusTubeManager.ts',
+        code: `class VirusTubeManager {
+  private params: Map<string, number>[];
+  private maxTotalPoints: number = 12;
+  private maxPerParam: number = 10;
+  
+  addPoint(paramName: string): void {
+    const current = this.params[this.currentVirusIndex].get(paramName) || 0;
+    const total = this.getTotalPoints();
+    
+    if (current < this.maxPerParam && total < this.maxTotalPoints) {
+      this.params[this.currentVirusIndex].set(paramName, current + 1);
+      this.updateDisplay();
+    }
+  }
+  
+  randomizeCurrentVirus(): void {
+    // Random distribution of 12 points
+  }
+}`
+      },
+      mouseFollower: {
+        file: 'client/src/features/mouse-follower/MouseFollowerManager.ts',
+        code: `class MouseFollowerManager {
+  private follower: PIXI.Sprite;
+  private networkManager: NetworkManager;
+  
+  constructor(stage: PIXI.Container, networkManager: NetworkManager) {
+    this.networkManager = networkManager;
+    this.follower = new PIXI.Sprite(this.texture);
+    stage.addChild(this.follower);
+  }
+  
+  updateLocalPosition(x: number, y: number): void {
+    this.follower.x = x;
+    this.follower.y = y;
+  }
+}`
+      },
+      uiController: {
+        file: 'client/src/ui/UIController.ts',
+        code: `class UIController {
+  private currentView: 'lobby' | 'room' | 'sandbox' = 'lobby';
+  
+  setView(view: 'lobby' | 'room' | 'sandbox'): void {
+    this.currentView = view;
+    this.hideAllScreens();
+    
+    switch(view) {
+      case 'lobby':
+        this.showScreen('landingScreen');
+        break;
+      case 'sandbox':
+        this.showScreen('sandboxScreen');
+        break;
+    }
+  }
+  
+  showScreen(screenId: string): void {
+    const screen = document.getElementById(screenId);
+    if (screen) {
+      screen.classList.remove('hidden');
+    }
+  }
+}`
+      },
+      chat: {
+        file: 'client/src/chat/ChatManager.ts',
+        code: `class ChatManager {
+  private chatInput: HTMLInputElement;
+  private chatMessages: HTMLElement;
+  
+  constructor() {
+    this.chatInput = document.getElementById('chat-input') as HTMLInputElement;
+    this.chatMessages = document.getElementById('chat-messages');
+    
+    this.chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        this.sendMessage(this.chatInput.value);
+      }
+    });
+  }
+  
+  sendMessage(message: string): void {
+    // Send message logic
+  }
+}`
+      },
+      server: {
+        file: 'server/src/index.ts',
+        code: `import { Server, Room, Client } from "colyseus";
+import express from "express";
+import http from "http";
+
+const app = express();
+const server = http.createServer(app);
+const gameServer = new Server({ server });
+
+gameServer.define("battle_room", BattleRoom);
+
+server.listen(2567, () => {
+  console.log("Server listening on port 2567");
+});`
+      },
+      battleRoom: {
+        file: 'server/src/rooms/BattleRoom.ts',
+        code: `export class BattleRoom extends Room<RoomState> {
+  onCreate(options: any): void {
+    this.setState(new RoomState());
+    this.setSimulationInterval(() => this.battleTick(), 500);
+  }
+  
+  onJoin(client: Client, options: any): void {
+    console.log('Player joined:', client.sessionId);
+  }
+  
+  onLeave(client: Client, consented: boolean): void {
+    console.log('Player left:', client.sessionId);
+  }
+  
+  battleTick(): void {
+    // Battle simulation logic
+  }
+}`
+      },
+      schema: {
+        file: 'server/src/rooms/schema.ts',
+        code: `import { Schema, type, MapSchema } from "@colyseus/schema";
+
+export class RoomState extends Schema {
+  @type("string")
+  public state: string = 'waiting';
+  
+  @type("number")
+  public tick: number = 0;
+  
+  @type({ map: Player })
+  public players = new MapSchema<Player>();
+  
+  @type(["number"])
+  public battleGrid: number[] = [];
+}
+
+export class Player extends Schema {
+  @type("string")
+  public name: string = '';
+  
+  @type("number")
+  public score: number = 0;
+}`
+      },
+      gridConfig: {
+        file: 'client/src/features/battle/GridConfig.ts',
+        code: `export const GRID_WIDTH = 64;
+export const GRID_HEIGHT = 40;
+export const TOTAL_CELLS = GRID_WIDTH * GRID_HEIGHT; // 2560
+
+export function getStartingPositions(): { a: number[], b: number[] } {
+  const a: number[] = [];
+  const b: number[] = [];
+  
+  // Player A (top)
+  for (let x = 0; x < GRID_WIDTH; x++) {
+    for (let y = 0; y < 5; y++) {
+      a.push(y * GRID_WIDTH + x);
+    }
+  }
+  
+  // Player B (bottom)
+  for (let x = 0; x < GRID_WIDTH; x++) {
+    for (let y = GRID_HEIGHT - 5; y < GRID_HEIGHT; y++) {
+      b.push(y * GRID_WIDTH + x);
+    }
+  }
+  
+  return { a, b };
+}`
+      },
+      types: {
+        file: 'client/src/features/battle/BioTypes.ts',
+        code: `export interface VirusParams {
+  aggression: number;      // ⚔️ Attack power
+  virulence: number;       // ☣️ Infection speed
+  defense: number;         // 🛡️ Damage reduction
+  resilience: number;      // 💪 HP regeneration
+  propagation: number;     // ⚡ Spread range
+  mobility: number;        // 🚶 Jump range
+  mutation: number;        // 🧬 Infestation chance
+  stealth: number;         // 👻 Detection avoidance
+  replication: number;     // 🦠 Spawn rate
+  synergy: number;         // 🔗 Adjacency bonuses
+}
+
+export type BattleStateType = 'idle' | 'preparing' | 'running' | 'ended';`
+      }
+    };
+    
+    // Tab switching
+    document.querySelectorAll('.tab-circle').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-circle').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+        document.getElementById('tabTitleDisplay').textContent = tabTitles[tab.dataset.tab];
+      });
+    });
+    
+    // Code panel functions
+    function openCodePanel(nodeId) {
+      const code = codeDatabase[nodeId];
+      if (code) {
+        document.getElementById('codePanelTitle').textContent = '📄 ' + nodeId.toUpperCase();
+        document.getElementById('codePanelSubtitle').textContent = 'FILE: ' + code.file;
+        document.getElementById('codePanelCode').textContent = code.code;
+        document.getElementById('codePanel').style.display = 'flex';
+      }
+    }
+    
+    function closeCodePanel() {
+      document.getElementById('codePanel').style.display = 'none';
+    }
+    
+    // Add click handlers to nodes
+    document.querySelectorAll('.node').forEach(node => {
+      node.addEventListener('click', function(e) {
+        // Prevent triggering when dragging
+        if (this.classList.contains('dragging')) return;
+        const tooltipId = this.getAttribute('data-tooltip');
+        if (tooltipId) {
+          openCodePanel(tooltipId);
+        }
+      });
+    });
+    
+    // Tooltip handling
+    const tooltip = document.getElementById('tooltip');
+    document.querySelectorAll('.node').forEach(node => {
+      node.addEventListener('mouseenter', () => {
+        tooltip.querySelector('#tooltip-title').textContent = node.querySelector('.node-title').textContent;
+        tooltip.querySelector('#tooltip-content').innerHTML = node.querySelector('.node-description').innerHTML + '<br><br>' + (node.querySelector('.node-methods')?.innerHTML || '');
+        tooltip.style.display = 'block';
+      });
+      node.addEventListener('mousemove', e => { 
+        tooltip.style.left = (e.pageX + 15) + 'px'; 
+        tooltip.style.top = (e.pageY + 15) + 'px'; 
+      });
+      node.addEventListener('mouseleave', () => { 
+        tooltip.style.display = 'none'; 
+      });
+    });
+    
+    // Zoom controls
+    let zoom = 1;
+    function zoomIn() { 
+      zoom = Math.min(zoom + 0.2, 2); 
+      document.getElementById('nodeDiagram').style.transform = `scale(${zoom})`; 
+    }
+    function zoomOut() { 
+      zoom = Math.max(zoom - 0.2, 0.5); 
+      document.getElementById('nodeDiagram').style.transform = `scale(${zoom})`; 
+    }
+    function resetZoom() { 
+      zoom = 1; 
+      document.getElementById('nodeDiagram').style.transform = 'scale(1)'; 
+    }
+    
+    // Dragging functionality
+    let dragged = null, offX = 0, offY = 0;
+    let isDragging = false;
+    
+    function dragNode(e) {
+      if (dragged && isDragging) { 
+        dragged.style.left = (e.clientX - offX) + 'px'; 
+        dragged.style.top = (e.clientY - offY) + 'px'; 
+        requestAnimationFrame(drawConnections);
+      }
+    }
+    
+    function stopDrag() { 
+      if (dragged) { 
+        dragged.style.zIndex = 10; 
+        dragged.classList.remove('dragging');
+        setTimeout(() => {
+          dragged.classList.remove('dragging');
+        }, 100);
+        dragged = null; 
+        isDragging = false;
+      }
+      document.removeEventListener('mousemove', dragNode);
+      document.removeEventListener('mouseup', stopDrag);
+    }
+    
+    document.querySelectorAll('.node').forEach(n => {
+      n.addEventListener('mousedown', e => { 
+        dragged = n; 
+        isDragging = false;
+        offX = e.clientX - n.offsetLeft; 
+        offY = e.clientY - n.offsetTop; 
+        n.style.zIndex = 100; 
+        
+        // Add dragging class to prevent click event
+        dragged.classList.add('dragging');
+        
+        document.addEventListener('mousemove', dragNode);
+        document.addEventListener('mouseup', stopDrag);
+        
+        // Set dragging flag after a short delay
+        setTimeout(() => {
+          isDragging = true;
+        }, 100);
+      });
+    });
+    
+    // Draw connection lines
+    function drawConnections() {
+      const svg = document.getElementById('connections');
+      const diagram = document.getElementById('nodeDiagram');
+      
+      // Clear existing lines
+      while (svg.lastChild && svg.lastChild.tagName !== 'defs') {
+        svg.removeChild(svg.lastChild);
+      }
+      
+      const connections = [
+        {from:'main',to:'gameEngine'},{from:'main',to:'network'},{from:'main',to:'input'},
+        {from:'main',to:'battleManager'},{from:'main',to:'battleRenderer'},{from:'main',to:'virusTube'},
+        {from:'gameEngine',to:'battleRenderer'},{from:'network',to:'server'},{from:'battleManager',to:'battleRenderer'},
+        {from:'virusTube',to:'network'},{from:'server',to:'battleRoom'},{from:'battleRoom',to:'schema'}
+      ];
+      
+      const dRect = diagram.getBoundingClientRect();
+      
+      connections.forEach(conn => {
+        const from = document.getElementById('node-' + conn.from);
+        const to = document.getElementById('node-' + conn.to);
+        
+        if (from && to) {
+          const f = from.getBoundingClientRect();
+          const t = to.getBoundingClientRect();
+          
+          const x1 = f.left + f.width/2 - dRect.left;
+          const y1 = f.top + f.height/2 - dRect.top;
+          const x2 = t.left + t.width/2 - dRect.left;
+          const y2 = t.top + t.height/2 - dRect.top;
+          
+          // Create curved path using Bezier curve
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          
+          // Calculate control points for smooth curve
+          const dx = Math.abs(x2 - x1) * 0.5;
+          const controlX1 = x1 + (x2 > x1 ? dx : -dx);
+          const controlY1 = y1;
+          const controlX2 = x2 - (x2 > x1 ? dx : -dx);
+          const controlY2 = y2;
+          
+          const pathData = `M ${x1} ${y1} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${x2} ${y2}`;
+          
+          path.setAttribute('d', pathData);
+          path.setAttribute('class', 'connection-line');
+          path.setAttribute('marker-end', 'url(#arrowhead)');
+          svg.appendChild(path);
+        }
+      });
+    }
+    
+    // Initialize
+    window.addEventListener('load', () => {
+      setTimeout(drawConnections, 100);
+    });
+    
+    // Redraw on resize
+    window.addEventListener('resize', drawConnections);
+  </script>
+</body>
+</html>

@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViRU5 - Grid Parameters Visualization</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: #ffffff;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .half {
+      flex: 1;
+      height: 100vh;
+      padding: 20px;
+      overflow-y: auto;
+      border-right: 2px solid #333;
+    }
+
+    .half:last-child {
+      border-right: none;
+    }
+
+    .single-player {
+      background: linear-gradient(180deg, rgba(255, 0, 102, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .multiplayer {
+      background: linear-gradient(180deg, rgba(0, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    .single-player h1 {
+      color: #ff0066;
+      text-shadow: 0 0 10px rgba(255, 0, 102, 0.5);
+    }
+
+    .multiplayer h1 {
+      color: #00ffff;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .grid-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .grid-section {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .grid-section h2 {
+      font-size: 16px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .grid-icon {
+      font-size: 20px;
+    }
+
+    .parameter-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .parameter-item {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .parameter-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .parameter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .parameter-name {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .parameter-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .slider-container {
+      position: relative;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .slider-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .single-player .slider-fill {
+      background: linear-gradient(90deg, #ff0066, #ff6699);
+    }
+
+    .multiplayer .slider-fill {
+      background: linear-gradient(90deg, #00ffff, #66ffff);
+    }
+
+    .virus-preview {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .virus-preview h3 {
+      font-size: 14px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .virus-circles {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 10px;
+    }
+
+    .virus-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .virus-circle .label {
+      font-size: 12px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .virus-circle .stats {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+
+    .virus-a {
+      background: radial-gradient(circle at 30% 30%, #ff6699, #ff0066);
+      box-shadow: 0 0 30px rgba(255, 0, 102, 0.6);
+    }
+
+    .virus-b {
+      background: radial-gradient(circle at 30% 30%, #66ffff, #00ffff);
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+    }
+
+    .virus-c {
+      background: radial-gradient(circle at 30% 30%, #99ff99, #00ff00);
+      box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+    }
+
+    .virus-d {
+      background: radial-gradient(circle at 30% 30%, #ffff99, #ffff00);
+      box-shadow: 0 0 30px rgba(255, 255, 0, 0.6);
+    }
+
+    .defense-rings {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    .defense-ring {
+      position: absolute;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .grid-visualization {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+    }
+
+    .grid-visualization h3 {
+      font-size: 14px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .mini-grid {
+      display: grid;
+      gap: 2px;
+      margin: 0 auto;
+      max-width: 400px;
+    }
+
+    .mini-grid.single {
+      grid-template-columns: repeat(16, 1fr);
+    }
+
+    .mini-grid.multi {
+      grid-template-columns: repeat(16, 1fr);
+    }
+
+    .grid-cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .grid-cell.empty {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .grid-cell.virus-a {
+      background: #ff0066;
+      box-shadow: 0 0 5px rgba(255, 0, 102, 0.5);
+    }
+
+    .grid-cell.virus-b {
+      background: #00ffff;
+      box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    }
+
+    .grid-cell.virus-c {
+      background: #00ff00;
+      box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    }
+
+    .grid-cell.virus-d {
+      background: #ffff00;
+      box-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+    }
+
+    .points-info {
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .points-info span {
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .synergy-box {
+      margin-top: 15px;
+      padding: 12px;
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 6px;
+    }
+
+    .synergy-box h4 {
+      font-size: 12px;
+      color: #ffd700;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .synergy-list {
+      font-size: 11px;
+      line-height: 1.6;
+      color: #ccc;
+    }
+
+    .synergy-item {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .synergy-item:last-child {
+      border-bottom: none;
+    }
+
+    .synergy-name {
+      color: #ffd700;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        height: auto;
+        overflow-y: auto;
+      }
+
+      .half {
+        height: auto;
+        min-height: 100vh;
+        border-right: none;
+        border-bottom: 2px solid #333;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- LEFT SIDE: SINGLE PLAYER -->
+  <div class="half single-player">
+    <h1>🧬 Single Player</h1>
+    <p class="subtitle">Laboratory Mode - 4 Virus Simulation</p>
+
+    <div class="grid-container">
+      <!-- Virus A Parameters -->
+      <div class="grid-section">
+        <h2><span class="grid-icon">🦠</span> Virus A (Red)</h2>
+        <div class="parameter-grid">
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">⚔️ Aggression</span>
+              <span class="parameter-value">8</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 80%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">☣️ Virulence</span>
+              <span class="parameter-value">6</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 60%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🛡️ Defense</span>
+              <span class="parameter-value">4</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 40%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">💪 Resilience</span>
+              <span class="parameter-value">3</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 30%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">⚡ Propagation</span>
+              <span class="parameter-value">7</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 70%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🚶 Mobility</span>
+              <span class="parameter-value">2</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 20%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🧬 Mutation</span>
+              <span class="parameter-value">5</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 50%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">👻 Stealth</span>
+              <span class="parameter-value">1</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 10%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🦠 Replication</span>
+              <span class="parameter-value">9</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 90%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🔗 Synergy</span>
+              <span class="parameter-value">7</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 70%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="points-info">
+          Points Used: <span>52/60</span> | Archetype: <span style="color: #ff0066">SWARM</span>
+        </div>
+      </div>
+
+      <!-- Virus B Parameters -->
+      <div class="grid-section">
+        <h2><span class="grid-icon">🦠</span> Virus B (Blue)</h2>
+        <div class="parameter-grid">
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">⚔️ Aggression</span>
+              <span class="parameter-value">3</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 30%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">☣️ Virulence</span>
+              <span class="parameter-value">4</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 40%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🛡️ Defense</span>
+              <span class="parameter-value">9</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 90%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">💪 Resilience</span>
+              <span class="parameter-value">8</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 80%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">⚡ Propagation</span>
+              <span class="parameter-value">3</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 30%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🚶 Mobility</span>
+              <span class="parameter-value">2</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 20%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🧬 Mutation</span>
+              <span class="parameter-value">2</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 20%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">👻 Stealth</span>
+              <span class="parameter-value">1</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 10%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🦠 Replication</span>
+              <span class="parameter-value">4</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 40%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🔗 Synergy</span>
+              <span class="parameter-value">5</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 50%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="points-info">
+          Points Used: <span>41/60</span> | Archetype: <span style="color: #00ffff">TURTLE</span>
+        </div>
+      </div>
+
+      <!-- Virus Preview -->
+      <div class="virus-preview">
+        <h3>Virus Visualization</h3>
+        <div class="virus-circles">
+          <div class="virus-circle virus-a">
+            <span class="label">Virus A</span>
+            <span class="stats">HP: 100</span>
+            <div class="defense-rings">
+              <div class="defense-ring" style="width: 50%; height: 50%"></div>
+              <div class="defense-ring" style="width: 65%; height: 65%"></div>
+              <div class="defense-ring" style="width: 80%; height: 80%"></div>
+            </div>
+          </div>
+          <div class="virus-circle virus-b">
+            <span class="label">Virus B</span>
+            <span class="stats">HP: 100</span>
+            <div class="defense-rings">
+              <div class="defense-ring" style="width: 50%; height: 50%"></div>
+              <div class="defense-ring" style="width: 65%; height: 65%"></div>
+              <div class="defense-ring" style="width: 80%; height: 80%"></div>
+              <div class="defense-ring" style="width: 95%; height: 95%"></div>
+              <div class="defense-ring" style="width: 110%; height: 110%"></div>
+              <div class="defense-ring" style="width: 125%; height: 125%"></div>
+              <div class="defense-ring" style="width: 140%; height: 140%"></div>
+              <div class="defense-ring" style="width: 155%; height: 155%"></div>
+              <div class="defense-ring" style="width: 170%; height: 170%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid Visualization -->
+      <div class="grid-visualization">
+        <h3>Battle Grid (64×40 = 2,560 cells)</h3>
+        <div class="mini-grid single" id="singlePlayerGrid"></div>
+      </div>
+
+      <!-- Synergy Box -->
+      <div class="synergy-box">
+        <h4>⚡ Active Synergies</h4>
+        <div class="synergy-list">
+          <div class="synergy-item">
+            <span class="synergy-name">THE FLOOD</span> (Replication + Propagation): Exponential growth
+          </div>
+          <div class="synergy-item">
+            <span class="synergy-name">IMMORTAL FORTRESS</span> (Defense + Resilience): Near-invincible
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE: MULTIPLAYER -->
+  <div class="half multiplayer">
+    <h1>⚔️ Multiplayer</h1>
+    <p class="subtitle">Online Battle - 2 Players</p>
+
+    <div class="grid-container">
+      <!-- Player 1 Parameters -->
+      <div class="grid-section">
+        <h2><span class="grid-icon">👤</span> Player 1 (Red)</h2>
+        <div class="parameter-grid">
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">⚔️ Aggression</span>
+              <span class="parameter-value">9</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 90%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">☣️ Virulence</span>
+              <span class="parameter-value">8</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 80%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🛡️ Defense</span>
+              <span class="parameter-value">2</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 20%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">💪 Resilience</span>
+              <span class="parameter-value">3</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 30%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">⚡ Propagation</span>
+              <span class="parameter-value">8</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 80%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🚶 Mobility</span>
+              <span class="parameter-value">4</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 40%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🧬 Mutation</span>
+              <span class="parameter-value">6</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 60%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">👻 Stealth</span>
+              <span class="parameter-value">2</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 20%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🦠 Replication</span>
+              <span class="parameter-value">5</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 50%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🔗 Synergy</span>
+              <span class="parameter-value">3</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 30%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="points-info">
+          Points Used: <span>50/60</span> | Archetype: <span style="color: #ff0066">APOCALYPSE</span>
+        </div>
+      </div>
+
+      <!-- Player 2 Parameters -->
+      <div class="grid-section">
+        <h2><span class="grid-icon">👤</span> Player 2 (Blue)</h2>
+        <div class="parameter-grid">
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">⚔️ Aggression</span>
+              <span class="parameter-value">4</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 40%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">☣️ Virulence</span>
+              <span class="parameter-value">5</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 50%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🛡️ Defense</span>
+              <span class="parameter-value">7</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 70%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">💪 Resilience</span>
+              <span class="parameter-value">6</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 60%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">⚡ Propagation</span>
+              <span class="parameter-value">5</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 50%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🚶 Mobility</span>
+              <span class="parameter-value">8</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 80%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🧬 Mutation</span>
+              <span class="parameter-value">9</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 90%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">👻 Stealth</span>
+              <span class="parameter-value">8</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 80%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🦠 Replication</span>
+              <span class="parameter-value">6</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 60%"></div>
+            </div>
+          </div>
+          <div class="parameter-item">
+            <div class="parameter-header">
+              <span class="parameter-name">🔗 Synergy</span>
+              <span class="parameter-value">7</span>
+            </div>
+            <div class="slider-container">
+              <div class="slider-fill" style="width: 70%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="points-info">
+          Points Used: <span>65/60</span> | Archetype: <span style="color: #00ffff">PHANTOM PLAGUE</span>
+        </div>
+      </div>
+
+      <!-- Virus Preview -->
+      <div class="virus-preview">
+        <h3>Virus Visualization</h3>
+        <div class="virus-circles">
+          <div class="virus-circle virus-a">
+            <span class="label">Player 1</span>
+            <span class="stats">HP: 100</span>
+            <div class="defense-rings">
+              <div class="defense-ring" style="width: 50%; height: 50%"></div>
+            </div>
+          </div>
+          <div class="virus-circle virus-b">
+            <span class="label">Player 2</span>
+            <span class="stats">HP: 100</span>
+            <div class="defense-rings">
+              <div class="defense-ring" style="width: 50%; height: 50%"></div>
+              <div class="defense-ring" style="width: 65%; height: 65%"></div>
+              <div class="defense-ring" style="width: 80%; height: 80%"></div>
+              <div class="defense-ring" style="width: 95%; height: 95%"></div>
+              <div class="defense-ring" style="width: 110%; height: 110%"></div>
+              <div class="defense-ring" style="width: 125%; height: 125%"></div>
+              <div class="defense-ring" style="width: 140%; height: 140%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid Visualization -->
+      <div class="grid-visualization">
+        <h3>Battle Grid (64×40 = 2,560 cells)</h3>
+        <div class="mini-grid multi" id="multiplayerGrid"></div>
+      </div>
+
+      <!-- Synergy Box -->
+      <div class="synergy-box">
+        <h4>⚡ Active Synergies</h4>
+        <div class="synergy-list">
+          <div class="synergy-item">
+            <span class="synergy-name">BLOODLUST</span> (Aggression × Virulence > 50): 2.5× damage
+          </div>
+          <div class="synergy-item">
+            <span class="synergy-name">PHANTOM PLAGUE</span> (Mutation + Stealth > 12): Invisible infestation
+          </div>
+          <div class="synergy-item">
+            <span class="synergy-name">GHOST SWARM</span> (Propagation + Mobility): Unpredictable movement
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Generate mini grid visualization
+    function generateGrid(elementId, isSinglePlayer) {
+      const grid = document.getElementById(elementId);
+      const totalCells = isSinglePlayer ? 256 : 128; // Mini representation
+      
+      for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell empty';
+        
+        // Random virus placement for visualization
+        const rand = Math.random();
+        if (isSinglePlayer) {
+          if (rand < 0.15) cell.classList.add('virus-a');
+          else if (rand < 0.25) cell.classList.add('virus-b');
+          else if (rand < 0.32) cell.classList.add('virus-c');
+          else if (rand < 0.38) cell.classList.add('virus-d');
+        } else {
+          if (rand < 0.2) cell.classList.add('virus-a');
+          else if (rand < 0.35) cell.classList.add('virus-b');
+        }
+        
+        grid.appendChild(cell);
+      }
+    }
+
+    // Initialize grids
+    generateGrid('singlePlayerGrid', true);
+    generateGrid('multiplayerGrid', false);
+
+    // Animate sliders on load
+    document.querySelectorAll('.slider-fill').forEach((slider, index) => {
+      const targetWidth = slider.style.width;
+      slider.style.width = '0%';
+      setTimeout(() => {
+        slider.style.width = targetWidth;
+      }, index * 50);
+    });
+  </script>
+</body>
+</html>

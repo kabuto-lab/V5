@@ -45,6 +45,8 @@ export class InputManager {
       this.mouseState.x = e.clientX;
       this.mouseState.y = e.clientY;
 
+      console.log('[InputManager] Mouse move:', e.clientX, e.clientY, 'callback:', !!this.onMouseMove);
+
       // Вызываем callback для follower circle
       if (this.onMouseMove) {
         this.onMouseMove(this.mouseState.x, this.mouseState.y);

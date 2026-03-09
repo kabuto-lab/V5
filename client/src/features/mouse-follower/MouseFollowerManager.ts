@@ -2,34 +2,19 @@ import * as PIXI from 'pixi.js';
 import { NetworkManager } from '../../core/NetworkManager';
 
 /**
- * Mouse Follower System (MFL)
- * 
- * Each player sees TWO followers in real-time:
- * - mfl1 (RED): Follows Player 1's (creator) mouse
- * - mfl2 (BLUE): Follows Player 2's (joiner) mouse
- * 
- * Both players see BOTH followers on their screen.
+ * Mouse Follower System - Simple Circle Version
+ * Follows player's mouse with their virus color
  */
 
 interface MouseFollowerData {
-  playerId: string;           // Server session ID
-  label: 'mfl1' | 'mfl2';     // Clear label
-  color: number;              // Red for mfl1, Blue for mfl2
-  targetX: number;            // Target position (from network)
+  playerId: string;
+  label: 'mfl1' | 'mfl2';
+  virusColor: number;
+  targetX: number;
   targetY: number;
-  currentX: number;           // Interpolated position
+  currentX: number;
   currentY: number;
-  graphics: PIXI.Container | null;
-  labelSprite: PIXI.Text | null;
-  trail: TrailParticle[];     // Trail particles behind follower
-}
-
-interface TrailParticle {
-  x: number;
-  y: number;
-  alpha: number;
-  radius: number;
-  graphics: PIXI.Graphics;
+  graphics: PIXI.Graphics | null;
 }
 
 export class MouseFollowerManager {
@@ -37,64 +22,56 @@ export class MouseFollowerManager {
   private localPlayerId: string | null = null;
   private isCreator: boolean = false;
   private lastSendTime: number = 0;
-  private readonly SEND_INTERVAL_MS: number = 33; // ~30 updates per second
-  private readonly TRAIL_LENGTH: number = 8;      // Number of trail particles
-  private readonly TRAIL_SPAWN_RATE: number = 3;  // Spawn trail every N frames
-  private frameCount: number = 0;
+  private readonly SEND_INTERVAL_MS: number = 33;
 
   constructor(
     private stage: PIXI.Container,
     private networkManager: NetworkManager
-  ) {
-  }
+  ) {}
 
   /**
-   * Setup network listeners (call after room is joined)
+   * Setup network listeners
    */
   setupNetworkListeners() {
-    // Subscribe to server messages
     this.networkManager.onMessage('mflUpdate', (data: {
       playerId: string;
       isCreator: boolean;
       x: number;
       y: number;
+      virusColor?: number;
     }) => {
-      this.updateRemoteFollower(data.playerId, data.isCreator, data.x, data.y);
+      this.updateRemoteFollower(data.playerId, data.isCreator, data.x, data.y, data.virusColor);
     });
 
-    // Start interpolation ticker
     PIXI.Ticker.shared.add((ticker) => this.update(ticker.deltaTime));
   }
 
   /**
    * Call when room is joined/created
    */
-  onRoomJoined(isCreator: boolean, localPlayerId: string) {
+  onRoomJoined(isCreator: boolean, localPlayerId: string, virusColor?: number) {
     this.localPlayerId = localPlayerId;
     this.isCreator = isCreator;
 
-    // Create local follower entry (we'll update it every frame)
     const label = isCreator ? 'mfl1' : 'mfl2';
-    const color = isCreator ? 0xff0000 : 0x0000ff; // Red for mfl1, Blue for mfl2
+    const color = virusColor || (isCreator ? 0xff0066 : 0x00ffff);
 
     this.followers.set(localPlayerId, {
       playerId: localPlayerId,
       label,
-      color,
-      targetX: 0,
-      targetY: 0,
-      currentX: 0,
-      currentY: 0,
+      virusColor: color,
+      targetX: window.innerWidth / 2,
+      targetY: window.innerHeight / 2,
+      currentX: window.innerWidth / 2,
+      currentY: window.innerHeight / 2,
       graphics: null,
-      labelSprite: null,
-      trail: [],
     });
   }
 
   /**
-   * Update local mouse position - called every frame from InputManager
+   * Update local mouse position
    */
-  updateLocalPosition(x: number, y: number) {
+  updateLocalPosition(x: number, y: number, virusColor?: number) {
     if (!this.localPlayerId) return;
 
     const follower = this.followers.get(this.localPlayerId);
@@ -102,13 +79,17 @@ export class MouseFollowerManager {
       follower.targetX = x;
       follower.targetY = y;
 
-      // Send to server (rate-limited)
+      if (virusColor !== undefined) {
+        follower.virusColor = virusColor;
+      }
+
       const now = Date.now();
       if (now - this.lastSendTime > this.SEND_INTERVAL_MS) {
         this.networkManager.sendToRoom('mflUpdate', {
           isCreator: this.isCreator,
           x,
-          y
+          y,
+          virusColor: follower.virusColor
         });
         this.lastSendTime = now;
       }
@@ -116,107 +97,86 @@ export class MouseFollowerManager {
   }
 
   /**
-   * Update remote follower position from server
+   * Update remote follower from server
    */
-  private updateRemoteFollower(playerId: string, isCreator: boolean, x: number, y: number) {
+  private updateRemoteFollower(
+    playerId: string,
+    isCreator: boolean,
+    x: number,
+    y: number,
+    virusColor?: number
+  ) {
     let follower = this.followers.get(playerId);
 
     if (!follower) {
-      // New remote player joined - create follower
       const label = isCreator ? 'mfl1' : 'mfl2';
-      const color = isCreator ? 0xff0000 : 0x0000ff;
+      const color = virusColor || (isCreator ? 0xff0066 : 0x00ffff);
 
       follower = {
         playerId,
         label,
-        color,
+        virusColor: color,
         targetX: x,
         targetY: y,
         currentX: x,
         currentY: y,
         graphics: null,
-        labelSprite: null,
-        trail: [],
       };
 
       this.followers.set(playerId, follower);
     }
 
-    // Update target position
     follower.targetX = x;
     follower.targetY = y;
+    if (virusColor !== undefined) {
+      follower.virusColor = virusColor;
+    }
   }
 
   /**
-   * Create visual representation for a follower
+   * Create visual representation
    */
   private createFollowerGraphics(follower: MouseFollowerData) {
-    if (follower.graphics) return; // Already created
+    if (follower.graphics) return;
 
-    const container = new PIXI.Container();
-
-    // Create the follower circle (glowing effect)
-    const circle = new PIXI.Graphics();
-    circle.beginFill(follower.color, 0.5); // Semi-transparent fill
-    circle.drawCircle(0, 0, 20);
-    circle.endFill();
-    circle.lineStyle(3, follower.color, 1); // Solid color border
-    circle.drawCircle(0, 0, 20);
-
-    // Inner glow
-    const glow = new PIXI.Graphics();
-    glow.beginFill(follower.color, 0.3);
-    glow.drawCircle(0, 0, 25);
-    glow.endFill();
-
-    // Center dot
-    const center = new PIXI.Graphics();
-    center.beginFill(0xffffff, 1);
-    center.drawCircle(0, 0, 5);
-    center.endFill();
-
-    // Create label text
-    const labelSprite = new PIXI.Text(follower.label, {
-      fontFamily: 'PIXY',
-      fontSize: 16,
-      fill: follower.color,
-      fontWeight: 'bold',
-      stroke: {
-        color: 0x000000,
-        width: 3,
-      } as any,
-    });
-    labelSprite.anchor.set(0.5);
-    labelSprite.x = 0;
-    labelSprite.y = -35; // Above the circle
-
-    // Assemble container
-    container.addChild(glow);
-    container.addChild(circle);
-    container.addChild(center);
-    container.addChild(labelSprite);
-
-    container.zIndex = 1000;
+    const graphics = new PIXI.Graphics();
+    graphics.zIndex = 1000;
+    graphics.eventMode = 'none';
     
-    // КРИТИЧЕСКИ ВАЖНО: followers пропускают события мыши сквозь себя
-    container.eventMode = 'none'; // Не блокирует mouse events
-
-    this.stage.addChild(container);
-
-    follower.graphics = container;
-    follower.labelSprite = labelSprite;
+    this.stage.addChild(graphics);
+    follower.graphics = graphics;
   }
 
   /**
-   * Update all followers (interpolation + rendering + trail)
+   * Draw follower
+   */
+  private drawFollower(follower: MouseFollowerData) {
+    if (!follower.graphics) return;
+
+    const g = follower.graphics;
+    g.clear();
+
+    // Outer glow
+    g.fill({ color: follower.virusColor, alpha: 0.3 });
+    g.circle(0, 0, 20);
+
+    // Main circle
+    g.fill({ color: follower.virusColor, alpha: 0.8 });
+    g.circle(0, 0, 12);
+
+    // Center dot
+    g.fill({ color: 0xffffff, alpha: 1 });
+    g.circle(0, 0, 5);
+  }
+
+  /**
+   * Update all followers
    */
   private update(delta: number) {
-    const lerp = 0.2; // Smoother interpolation
-    this.frameCount++;
+    const lerp = 0.2;
 
     this.followers.forEach((follower) => {
       if (!follower.graphics) {
-        // Create graphics on first update
         this.createFollowerGraphics(follower);
         return;
       }
@@ -228,97 +188,20 @@ export class MouseFollowerManager {
       // Update position
       follower.graphics.position.set(follower.currentX, follower.currentY);
 
-      // Pulse effect for active followers
-      const pulse = 1 + Math.sin(Date.now() / 200) * 0.1;
-      follower.graphics.scale.set(pulse);
-
-      // Spawn trail particles
-      if (this.frameCount % this.TRAIL_SPAWN_RATE === 0) {
-        this.spawnTrailParticle(follower);
-      }
-
-      // Update trail particles
-      this.updateTrail(follower);
+      // Draw
+      this.drawFollower(follower);
     });
   }
 
   /**
-   * Spawn a new trail particle at follower's current position
-   */
-  private spawnTrailParticle(follower: MouseFollowerData) {
-    // Create trail particle graphics
-    const particle = new PIXI.Graphics();
-    const radius = 12;
-    particle.beginFill(follower.color, 0.6);
-    particle.drawCircle(0, 0, radius);
-    particle.endFill();
-    particle.position.set(follower.currentX, follower.currentY);
-    particle.zIndex = 999; // Just below the main follower
-
-    this.stage.addChild(particle);
-
-    // Add to trail array
-    follower.trail.push({
-      x: follower.currentX,
-      y: follower.currentY,
-      alpha: 0.6,
-      radius,
-      graphics: particle,
-    });
-
-    // Limit trail length
-    if (follower.trail.length > this.TRAIL_LENGTH) {
-      const oldParticle = follower.trail.shift();
-      if (oldParticle && oldParticle.graphics) {
-        this.stage.removeChild(oldParticle.graphics);
-        oldParticle.graphics.destroy();
-      }
-    }
-  }
-
-  /**
-   * Update trail particles (fade out and shrink)
-   */
-  private updateTrail(follower: MouseFollowerData) {
-    follower.trail.forEach((particle, index) => {
-      // Fade out based on position in trail (older = more faded)
-      const fadeFactor = 1 - (index / this.TRAIL_LENGTH);
-      particle.alpha = 0.6 * fadeFactor;
-      
-      // Shrink radius
-      const newRadius = particle.radius * fadeFactor;
-      
-      // Update graphics
-      particle.graphics.clear();
-      particle.graphics.beginFill(follower.color, particle.alpha);
-      particle.graphics.drawCircle(0, 0, newRadius);
-      particle.graphics.endFill();
-    });
-  }
-
-  /**
-   * Get current follower count
-   */
-  getFollowerCount(): number {
-    return this.followers.size;
-  }
-
-  /**
-   * Clear all followers (on room leave)
+   * Clear all followers
    */
   destroy() {
     this.followers.forEach((follower) => {
       if (follower.graphics) {
         this.stage.removeChild(follower.graphics);
+        follower.graphics.destroy();
       }
-      // Clean up trail particles
-      follower.trail.forEach((particle) => {
-        if (particle.graphics) {
-          this.stage.removeChild(particle.graphics);
-          particle.graphics.destroy();
-        }
-      });
-      follower.trail = [];
     });
     this.followers.clear();
   }

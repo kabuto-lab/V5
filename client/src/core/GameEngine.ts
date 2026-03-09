@@ -37,7 +37,7 @@ export class GameEngine {
     this.app.canvas.style.top = '0';
     this.app.canvas.style.left = '0';
     this.app.canvas.style.zIndex = '1';                // низкий z-index
-    this.app.canvas.style.pointerEvents = 'auto';      // для интерактивных объектов
+    this.app.canvas.style.pointerEvents = 'none';      // пропускает события мыши сквозь canvas
 
     // Получаем ticker после инициализации
     this.ticker = this.app.ticker;

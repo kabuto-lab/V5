@@ -46,8 +46,11 @@ class MainApp {
       this.gameEngine.init('canvasContainer').then(() => {
         this.mouseFollower = new MouseFollowerManager(this.gameEngine.app!.stage, this.networkManager);
 
+        // Sandbox mode - use pink color by default
+        this.mouseFollower.onRoomJoined(true, 'sandbox-player', 0xff0066);
+
         this.inputManager.onMouseMove = (x, y) => {
-          this.mouseFollower.updateLocalPosition(x, y);
+          this.mouseFollower.updateLocalPosition(x, y, 0xff0066);
         };
 
         this.gameEngine.start();
@@ -133,11 +136,11 @@ class MainApp {
       // Create a MutationObserver to watch for points changes
       const observer = new MutationObserver(() => {
         const text = pointsRemainingEl.textContent?.trim() || '12';
-        
+
         // Check if text contains READY marker
-        const isReady = text.includes('READY') || text.includes('✅');
-        
-        // Extract number from text (handle "✅ READY (12/12)" format)
+        const isReady = text.includes('ГОТОВ') || text.includes('READY') || text.includes('✅');
+
+        // Extract number from text (handle "✅ ГОТОВ (12/12)" format)
         let remaining = 12;
         const match = text.match(/\((\d+)\/12\)/);
         if (match) {
@@ -145,13 +148,13 @@ class MainApp {
         } else {
           remaining = parseInt(text, 10);
         }
-        
+
         // Handle NaN case
         if (isNaN(remaining)) {
           console.warn('[MainApp] Points remaining is NaN:', text);
           remaining = 12;
         }
-        
+
         const pointsSpent = 12 - remaining;
         const readyBtns = document.querySelectorAll('#readyBtn');
 
@@ -159,11 +162,11 @@ class MainApp {
           const readyBtn = btn as HTMLButtonElement;
           if (remaining === 0 || isReady) {
             readyBtn.disabled = false;
-            readyBtn.textContent = '👍 READY (12/12)';
+            readyBtn.textContent = '👍 ГОТОВ (12/12)';
             readyBtn.style.opacity = '1';
           } else {
             readyBtn.disabled = true;
-            readyBtn.textContent = `👍 READY (${pointsSpent}/12)`;
+            readyBtn.textContent = `👍 ГОТОВ (${pointsSpent}/12)`;
             readyBtn.style.opacity = '0.5';
           }
         });
@@ -412,16 +415,32 @@ class MainApp {
           this.networkManager.sendParameterUpdate(params);
         });
 
+        // Очистить старый mouse follower (из sandbox) и создать новый для мультиплеера
+        if (this.mouseFollower) {
+          this.mouseFollower.destroy();
+        }
+        this.mouseFollower = new MouseFollowerManager(this.gameEngine.app!.stage, this.networkManager);
+
+        // Wire up mouse input for multiplayer
+        this.inputManager.onMouseMove = (x, y) => {
+          this.mouseFollower.updateLocalPosition(x, y, 0xff0066);
+        };
+
         // Показываем ID комнаты сразу
         this.uiController.showCreatedRoomId(roomId);
 
         const room = this.networkManager.getCurrentRoom();
         if (room) {
           this.chatManager.attachToRoom(room);
+          // Show chat container in multiplayer
+          const chatContainer = document.getElementById('chat-container');
+          if (chatContainer) chatContainer.style.display = 'block';
+          
           // Устанавливаем network listeners для mouse follower
           this.mouseFollower.setupNetworkListeners();
-          // Устанавливаем mouse follower для создателя
-          this.mouseFollower.onRoomJoined(true, this.networkManager.getSessionId()!);
+          // Устанавливаем mouse follower для создателя (цвет = розовый вирус)
+          const virusColor = 0xff0066; // Player 1 color (PINK)
+          this.mouseFollower.onRoomJoined(true, this.networkManager.getSessionId()!, virusColor);
 
           // Подписываемся на изменение количества игроков
           this.networkManager.onRoomStateChange = (count, max) => {
@@ -430,7 +449,13 @@ class MainApp {
           // Обновляем счётчик при создании комнаты
           this.uiController.updatePlayerCount(this.networkManager.getPlayerCount(), 2);
         }
+        // Set player 1 name with PINK color
         this.uiController.setPlayerName('Player 1');
+        const player1NameEl = document.getElementById('player1Name');
+        if (player1NameEl) player1NameEl.style.color = '#ff0066';
+        
+        // Setup speed buttons
+        this.setupSpeedButtons();
       } catch (error) {
         console.error('[MainApp] ERROR in onCreateRoom:', error);
         alert('Create room ERROR: ' + error);
@@ -458,16 +483,32 @@ class MainApp {
           this.networkManager.sendParameterUpdate(params);
         });
 
+        // Очистить старый mouse follower (из sandbox) и создать новый для мультиплеера
+        if (this.mouseFollower) {
+          this.mouseFollower.destroy();
+        }
+        this.mouseFollower = new MouseFollowerManager(this.gameEngine.app!.stage, this.networkManager);
+
+        // Wire up mouse input for multiplayer
+        this.inputManager.onMouseMove = (x, y) => {
+          this.mouseFollower.updateLocalPosition(x, y, 0x00ffff);
+        };
+
         // Показываем ID комнаты сразу
         this.uiController.showCreatedRoomId(roomId);
 
         const room = this.networkManager.getCurrentRoom();
         if (room) {
           this.chatManager.attachToRoom(room);
+          // Show chat container in multiplayer
+          const chatContainer = document.getElementById('chat-container');
+          if (chatContainer) chatContainer.style.display = 'block';
+          
           // Устанавливаем network listeners для mouse follower
           this.mouseFollower.setupNetworkListeners();
-          // Устанавливаем mouse follower для присоединившегося
-          this.mouseFollower.onRoomJoined(false, this.networkManager.getSessionId()!);
+          // Устанавливаем mouse follower для присоединившегося (цвет = циан/голубой вирус)
+          const virusColor = 0x00ffff; // Player 2 color (CYAN)
+          this.mouseFollower.onRoomJoined(false, this.networkManager.getSessionId()!, virusColor);
 
           // Подписываемся на изменение количества игроков
           this.networkManager.onRoomStateChange = (count, max) => {
@@ -476,12 +517,62 @@ class MainApp {
           // Обновляем счётчик при присоединении
           this.uiController.updatePlayerCount(this.networkManager.getPlayerCount(), 2);
         }
+        // Set player 2 name with CYAN color
         this.uiController.setPlayerName('Player 2');
+        const player2NameEl = document.getElementById('player2Name');
+        if (player2NameEl) player2NameEl.style.color = '#00ffff';
+        
+        // Setup speed buttons
+        this.setupSpeedButtons();
       } catch (error) {
         console.error('[MainApp] ERROR in onJoinRoom:', error);
         alert('Join room ERROR: ' + error);
       }
     };
+  }
+
+  /**
+   * Setup speed control buttons
+   */
+  private setupSpeedButtons(): void {
+    const speedButtons = document.querySelectorAll('.speed-btn');
+    speedButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent event bubbling
+        const speed = parseInt((btn as HTMLElement).dataset.speed || '1');
+        this.setBattleSpeed(speed);
+
+        // Update button styles using class instead of inline styles
+        speedButtons.forEach(b => {
+          b.classList.remove('active');
+          b.style.background = '';
+          b.style.color = '';
+        });
+        btn.classList.add('active');
+
+        this.updateDebugPanel(`Speed: ${speed}x`);
+      });
+    });
+  }
+
+  /**
+   * Check if current player is Player 1 (creator)
+   */
+  private isPlayer1(): boolean {
+    const room = this.networkManager.getCurrentRoom();
+    if (!room) return false;
+    const player = room.state.players.get(this.networkManager.getSessionId()!);
+    return player?.isRoomCreator ?? false;
+  }
+
+  /**
+   * Set battle speed multiplier
+   */
+  private setBattleSpeed(speed: number): void {
+    const intervalMs = 500 / speed;
+    if (this.battleManager) {
+      this.battleManager.setSpreadInterval(intervalMs);
+    }
   }
 
   /**
@@ -679,7 +770,7 @@ class MainApp {
           // SHOW the battle renderer
           this.battleRenderer.show();
 
-          this.updateDebugPanel('Battle: 4 viruses | 32x20 grid');
+          this.updateDebugPanel(`Battle: 4 viruses | ${width}x${height} grid`);
         }
 
         // Setup grid update callback for sandbox mode

@@ -1021,6 +1021,9 @@ export class BattleManager {
     const total = countA + countB;
     if (total === 0) return;
 
+    // Минимальный порог - хотя бы 10 клеток на поле
+    if (total < 10) return;
+
     const percentA = (countA / total) * 100;
     const percentB = (countB / total) * 100;
 
@@ -1417,29 +1420,33 @@ export class BattleManager {
    */
   private checkWinCondition4Player(): void {
     if (!this.gridData) return;
-    
-    const totalCells = this.gridData.grid.length;
+
     const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
-    
+
     for (const cell of this.gridData.grid) {
       if (cell >= 1 && cell <= 4) {
         counts[cell]++;
       }
     }
+
+    const occupiedCells = counts[1] + counts[2] + counts[3] + counts[4];
     
-    // Check if any virus has 90% (lower threshold for 4-player)
+    // Early game - not enough cells yet
+    if (occupiedCells < 20) return;
+
+    // Check if any virus has 90% of OCCUPIED cells
     for (const [virusType, count] of Object.entries(counts)) {
-      const percent = (count / totalCells) * 100;
+      const percent = (count / occupiedCells) * 100;
       if (percent >= 90) {
         this.endBattle4Player(parseInt(virusType), counts);
         return;
       }
     }
-    
+
     // Max ticks reached
     if (this.state.type === 'running' && this.state.tick > 1000) {
       // Find winner by count
-      const winner = Object.entries(counts).reduce((a, b) => 
+      const winner = Object.entries(counts).reduce((a, b) =>
         counts[parseInt(a[0])] > counts[parseInt(b[0])] ? a : b
       )[0];
       this.endBattle4Player(parseInt(winner), counts);

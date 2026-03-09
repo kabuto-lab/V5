@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive System Architecture Explorer (ISA): Total Description, Technical Task, and Roadmap</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #0a0a0f;
+            color: #ddd;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #fcee0a; /* Yellow for headers */
+        }
+        section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #00f0ff; /* Cyan border */
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #00f0ff;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #1a1a2e;
+            color: #fcee0a;
+        }
+        code {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #0f0; /* Green for code */
+        }
+        pre {
+            background: #1a1a2e;
+            padding: 16px;
+            overflow-x: auto;
+            border-left: 4px solid #ff003c; /* Red border */
+        }
+        ul, ol {
+            padding-left: 20px;
+        }
+        a {
+            color: #00f0ff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Interactive System Architecture Explorer (ISA): Total Description, Technical Task, and Roadmap</h1>
+        <p>Prepared by Grok AI - March 09, 2026</p>
+        <p>This document provides a comprehensive, in-depth description of the ISA tool (evolving from the prototype ISA.html), including what has been done (based on prior context), what must be done, task analysis, optimal tech stack suggestions, detailed technical tasks, a phased roadmap, and additional necessary information such as risks, costs, and best practices. The ISA is envisioned as a Visual Development Environment (VDE) that crawls inputs (e.g., folders, apps, games), analyzes structures, generates interactive Data Flow Diagrams (DFD) for development, serves as an architecture explorer, allows node-based code editing like an IDE, and integrates CMS/CRM functionality.</p>
+    </header>
+
+    <section id="total-description">
+        <h2>1. Total Description: What Was Done and What Must Be Done</h2>
+        <h3>1.1 What Was Done (Current Prototype State)</h3>
+        <p>Based on the provided ISA.html prototype and prior discussions:</p>
+        <ul>
+            <li><strong>Visual Foundation:</strong> A cyberpunk-themed HTML/CSS/JS interface with an interactive node diagram (nodes for modules like MAIN_APP, GAME_ENGINE; edges for connections). Includes tabs (Diagram, Flow, Dependency, Stats), draggable nodes, dynamic SVG connections, tooltips, code panels, and zoom controls.</li>
+            <li><strong>Basic Interactivity:</strong> Tab switching, node hovering/clicking to show methods/code snippets (hardcoded in codeDatabase). Dragging redraws connections; clicking opens a code panel.</li>
+            <li><strong>Data Representation:</strong> Static nodes for a sample system (e.g., ViRU5 V5 architecture). Includes legends, flow containers, tree views, and stats grids.</li>
+            <li><strong>Limitations Addressed:</strong> Fixes for missing variables (tabTitles, tooltip), SVG dimensions, drag/click distinction.</li>
+            <li><strong>Extensions Discussed:</strong> Infinite grid, compact legends, real-time features, but not fully implemented yet.</li>
+        </ul>
+        <p>The prototype is a static visualization; no crawling, analysis, or bidirectional editing exists yet.</p>
+
+        <h3>1.2 What Must Be Done (Target State)</h3>
+        <p>To achieve the vision:</p>
+        <ul>
+            <li><strong>Input Handling:</strong> Accept links (Git repo, ZIP, local folder URL) for codebases (e.g., WordPress theme/plugin, app/game distro). Crawl hierarchy deeply (folders/subfolders/files).</li>
+            <li><strong>Analysis Engine:</strong> Parse files (AST for languages like PHP/JS), extract structures (classes/functions/dependencies), categorize (core/UI/server), compute metrics (complexity/size).</li>
+            <li><strong>Diagram Generation:</strong> Auto-create interactive DFDs (Data Flow Diagrams) showing architecture. Nodes for files/entities, edges for flows/dependencies. Infinite canvas, force-directed layouts.</li>
+            <li><strong>Explorer Functionality:</strong> Search/filter nodes, highlight paths, minimap navigation, annotations.</li>
+            <li><strong>Visual IDE:</strong> Click node to edit code inline (bidirectional sync: changes update files/diagram). Refactor via drag/connect (e.g., add import on edge creation).</li>
+            <li><strong>CMS/CRM Integration:</strong> Dual-mode: Devs edit code; users manage content/CRM data (e.g., nodes as pages/leads, connections as workflows). Live previews, DB sync.</li>
+            <li><strong>Additional:</strong> Real-time collaboration, exports (SVG/PNG), version control (Git), security (sandboxing), scalability for large projects.</li>
+        </ul>
+    </section>
+
+    <section id="task-analysis">
+        <h2>2. Task Analysis</h2>
+        <p>The task is to build ISA as a VDE that processes inputs, generates/ explores architecture diagrams, enables visual code editing, and supports CMS/CRM. Breakdown:</p>
+        <ul>
+            <li><strong>Core Workflow:</strong> User inputs link → Crawl/analyze → Generate DFD → Interact/edit/explore → Output updated codebase or content.</li>
+            <li><strong>Challenges:</strong> Multi-language parsing accuracy, performance for deep crawls (e.g., large games like Unity projects), conflict-free sync in collaboration, security for user-edited code execution.</li>
+            <li><strong>Use Cases:</strong> Dev: Refactor WordPress plugin visually. User: Edit CMS content via nodes. Team: Collaborate on game architecture.</li>
+            <li><strong>Requirements:</strong> Cross-platform (web-based), accessible (WCAG), extensible (plugins for new languages).</li>
+            <li><strong>Risks:</strong> Parsing errors in complex code, data privacy in CRM mode, high dev costs for bidirectional features.</li>
+        </ul>
+    </section>
+
+    <section id="tech-stack">
+        <h2>3. Optimal Tech Stack Suggestion</h2>
+        <p>Optimized for web-based interactivity, multi-language support, performance, and extensibility. Full-stack JS/TS for productivity.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Recommended Tools</th>
+                    <th>Rationale & Alternatives</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Frontend</strong></td>
+                    <td>React.js (v18+) + TypeScript</td>
+                    <td>Component-based for nodes/UI. Alt: Vue.js for lighter footprint.</td>
+                </tr>
+                <tr>
+                    <td><strong>Diagram/Canvas</strong></td>
+                    <td>React-Konva + Cytoscape.js + D3.js</td>
+                    <td>Konva for infinite canvas/dragging; Cytoscape for graphs; D3 for layouts/physics. Alt: GoJS for enterprise diagrams.</td>
+                </tr>
+                <tr>
+                    <td><strong>Code Editor</strong></td>
+                    <td>Monaco Editor</td>
+                    <td>Inline editing with syntax support. Alt: CodeMirror for simplicity.</td>
+                </tr>
+                <tr>
+                    <td><strong>State/Real-time</strong></td>
+                    <td>Zustand + Socket.io + Yjs</td>
+                    <td>State mgmt; WebSockets for collab; CRDT for conflicts. Alt: Redux + Firebase.</td>
+                </tr>
+                <tr>
+                    <td><strong>Backend</strong></td>
+                    <td>Node.js + NestJS</td>
+                    <td>Scalable API. Alt: Python/Django for ML-heavy analysis.</td>
+                </tr>
+                <tr>
+                    <td><strong>Parsing/Analysis</strong></td>
+                    <td>ts-morph (JS/TS), php-parser (PHP), parso (Python), Roslyn (C# for games)</td>
+                    <td>AST extraction. Alt: Tree-sitter for unified parsing.</td>
+                </tr>
+                <tr>
+                    <td><strong>Database</strong></td>
+                    <td>PostgreSQL + MongoDB</td>
+                    <td>Relational for CRM; NoSQL for CMS. Alt: Supabase for real-time DB.</td>
+                </tr>
+                <tr>
+                    <td><strong>CMS/CRM</strong></td>
+                    <td>Strapi + Custom CRM extensions</td>
+                    <td>Headless CMS; Build CRM on top. Alt: Directus or Sanity.</td>
+                </tr>
+                <tr>
+                    <td><strong>Deployment</strong></td>
+                    <td>Docker/Kubernetes + AWS/Vercel</td>
+                    <td>Scalability/security. Alt: Heroku for quick prototypes.</td>
+                </tr>
+                <tr>
+                    <td><strong>Testing/Tools</strong></td>
+                    <td>Jest + Cypress; ESLint</td>
+                    <td>Unit/E2E testing.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="technical-tasks">
+        <h2>4. Technical Tasks</h2>
+        <p>Ultra-detailed tasks, grouped by module. Estimated effort in person-days (PD) for a mid-senior dev.</p>
+        <h3>4.1 Input & Crawling (20 PD)</h3>
+        <ul>
+            <li>API endpoint for link input (Git/URL/ZIP).</li>
+            <li>Recursive crawler: Traverse folders, identify languages by extensions.</li>
+            <li>Handle large inputs: Streaming/ZIP extraction in Web Workers.</li>
+        </ul>
+        <h3>4.2 Analysis & Diagram Generation (40 PD)</h3>
+        <ul>
+            <li>Language-specific parsers: Extract entities/dependencies.</li>
+            <li>DFD Algo: Map to nodes/edges; auto-categorize via ML/heursitics.</li>
+            <li>Metrics: Compute & overlay (e.g., node size by complexity).</li>
+        </ul>
+        <h3>4.3 Visual IDE & Explorer (50 PD)</h3>
+        <ul>
+            <li>Infinite canvas with pan/zoom/minimap.</li>
+            <li>Bidirectional sync: AST mods on drag/connect; code save triggers re-analysis.</li>
+            <li>Search/filter/highlight; annotations/comments.</li>
+        </ul>
+        <h3>4.4 CMS/CRM Integration (30 PD)</h3>
+        <ul>
+            <li>Content nodes: Editable fields/previews.</li>
+            <li>CRM: Entity nodes (leads/workflows), DB sync.</li>
+            <li>Role-based UI: Hide code for non-devs.</li>
+        </ul>
+        <h3>4.5 Additional Features (25 PD)</h3>
+        <ul>
+            <li>Collab: Multi-user via Yjs.</li>
+            <li>Exports: SVG/PNG/Git push.</li>
+            <li>Security: Sandbox previews (VM2).</li>
+        </ul>
+    </section>
+
+    <section id="roadmap">
+        <h2>5. Roadmap</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Phase</th>
+                    <th>Duration</th>
+                    <th>Key Tasks & Deliverables</th>
+                    <th>Milestones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Phase 0: Prototype Refinement</td>
+                    <td>2 weeks</td>
+                    <td>Enhance ISA.html: Add infinite grid, compact UI.</td>
+                    <td>Working static DFD.</td>
+                </tr>
+                <tr>
+                    <td>Phase 1: Core Engine</td>
+                    <td>6 weeks</td>
+                    <td>Input crawling, parsing, basic diagram gen.</td>
+                    <td>Crawl & visualize WordPress theme.</td>
+                </tr>
+                <tr>
+                    <td>Phase 2: IDE Features</td>
+                    <td>8 weeks</td>
+                    <td>Bidirectional editing, explorer tools.</td>
+                    <td>Edit code via nodes, sync files.</td>
+                </tr>
+                <tr>
+                    <td>Phase 3: CMS/CRM</td>
+                    <td>6 weeks</td>
+                    <td>Integrate content/CRM modes.</td>
+                    <td>Non-dev content editing.</td>
+                </tr>
+                <tr>
+                    <td>Phase 4: Advanced & Polish</td>
+                    <td>6 weeks</td>
+                    <td>Collab, security, optimizations.</td>
+                    <td>Multi-user beta.</td>
+                </tr>
+                <tr>
+                    <td>Phase 5: Testing/Launch</td>
+                    <td>4 weeks</td>
+                    <td>E2E tests, docs, deploy.</td>
+                    <td>Production release.</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>Total: 32 weeks. Team: 4-6 devs. Cost: ~$300k (salaries/cloud).</p>
+    </section>
+
+    <section id="additional-info">
+        <h2>6. Additional Necessary Information</h2>
+        <ul>
+            <li><strong>Best Practices:</strong> Agile dev (sprints), CI/CD (GitHub Actions), monitoring (Sentry).</li>
+            <li><strong>Costs:</strong> Dev (~$100k), Cloud (~$5k/year), Tools (free/open-source).</li>
+            <li><strong>Legal/Security:</strong> GDPR for CRM data; open-source license (MIT).</li>
+            <li><strong>Success Metrics:</strong> 90% parse accuracy, <5s load for 1k nodes, user feedback NPS >8.</li>
+            <li><strong>Comparisons:</strong> Like Node-RED but for code arch; Unreal Blueprints for visual editing.</li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 xAI. Contact: grok@x.ai</p>
+    </footer>
+</body>
+</html>

@@ -81,8 +81,8 @@ export class NetworkManager {
    */
   async createRoom(): Promise<string> {
     try {
-      // Создаём новую комнату через joinOrCreate
-      this.currentRoom = await this.client.joinOrCreate('holding_room');
+      // Создаём новую комнату через create (не joinOrCreate!)
+      this.currentRoom = await this.client.create('holding_room');
 
       // Получаем roomId из state комнаты
       const roomId = this.currentRoom.state?.roomId || this.currentRoom.id;
@@ -94,7 +94,7 @@ export class NetworkManager {
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error('[NetworkManager] ERROR in createRoom:', errorMsg);
-      alert('Failed to create room: ' + errorMsg + '\\n\\nMake sure the server is running on port 2567.');
+      alert('Failed to create room: ' + errorMsg + '\n\nMake sure the server is running on port 2567.');
       throw error;
     }
   }

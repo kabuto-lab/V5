@@ -10,6 +10,7 @@ export class PlayerSchema extends Schema {
   @type('string') holdingHandsWith: string = ''; // ID of player this player is holding hands with
   @type('boolean') isRoomCreator: boolean = false; // Whether this player created the room
   @type('boolean') isReady: boolean = false; // Whether the player is ready to start the virus battle
+  @type('number') team: number = 0; // Team number (1 = Player A/Red, 2 = Player B/Blue)
   @type({ map: 'number' }) virusParams: Map<string, number> = new Map<string, number>(); // Virus parameters for the player
   @type('number') cursorX: number = 0; // Cursor X position for the player
   @type('number') cursorY: number = 0; // Cursor Y position for the player
@@ -36,6 +37,6 @@ export class RoomState extends Schema {
   @type({ map: DraggableObjectSchema }) objects = new MapSchema<DraggableObjectSchema>();
   @type('string') roomId: string = '';
   @type('number') maxPlayers: number = 2;
-  @type({ array: 'number' }) vGrid: number[] = []; // Virus battle grid (32x20 landscape/horizontal)
+  @type({ array: 'number' }) vGrid: number[] = []; // Virus battle grid (64x40 = 2560 cells)
   @type('boolean') vGridActive: boolean = false; // Whether the virus battle grid is active
 }

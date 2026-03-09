@@ -52,7 +52,7 @@ export class VirusTubeManager {
   };
 
   // Цвета для каждого вируса
-  private readonly virusColors = ['#ff0000', '#0000ff', '#00ff00', '#ffff00'];
+  private readonly virusColors = ['#ff0066', '#00ffff', '#00ff00', '#ffff00']; // Pink, Cyan, Green, Yellow
 
   /**
    * Constructor
@@ -167,11 +167,11 @@ export class VirusTubeManager {
       this.virusTabs.forEach(tab => {
         (tab as HTMLElement).style.display = 'none';
       });
-      
-      // Change header to show player's virus
+
+      // Hide header in multiplayer mode
       if (this.virusTabTitle) {
-        const virusColor = this.playerColor === 'red' ? '🔴 КРАСНЫЙ' : '🔵 СИНИЙ';
-        this.virusTabTitle.textContent = `ВАШ ВИРУС (${virusColor}) - 12 очков`;
+        this.virusTabTitle.textContent = '';
+        this.virusTabTitle.style.display = 'none';
       }
 
       // Set current virus based on player color
@@ -442,11 +442,11 @@ export class VirusTubeManager {
     if (this.pointsRemainingElement) {
       const remaining = this.maxTotalPoints - this.getUsedPoints();
       this.pointsRemainingElement.textContent = remaining.toString();
-      
+
       // Add "ready" class when all 12 points spent
       if (remaining === 0) {
         this.pointsRemainingElement.classList.add('ready');
-        this.pointsRemainingElement.textContent = '✅ READY (12/12)';
+        this.pointsRemainingElement.textContent = '✅ ГОТОВ (12/12)';
       } else {
         this.pointsRemainingElement.classList.remove('ready');
       }
