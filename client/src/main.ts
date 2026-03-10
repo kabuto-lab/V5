@@ -544,9 +544,9 @@ class MainApp {
 
         // Update button styles using class instead of inline styles
         speedButtons.forEach(b => {
-          b.classList.remove('active');
-          b.style.background = '';
-          b.style.color = '';
+          (b as HTMLElement).classList.remove('active');
+          (b as HTMLElement).style.background = '';
+          (b as HTMLElement).style.color = '';
         });
         btn.classList.add('active');
 
