@@ -380,17 +380,14 @@ class MainApp {
 
       const progressEl = document.getElementById('battleProgress');
       if (progressEl) {
-        // Обновляем градиент: красный слева, синий справа
-        const redEnd = percentA;
-        const blueStart = 100 - percentB;
-        
-        progressEl.style.background = `linear-gradient(90deg, 
-          rgba(255, 0, 0, 0.4) 0%, 
-          rgba(255, 0, 0, 0.4) ${redEnd}%, 
-          rgba(0, 0, 0, 0.5) ${redEnd}%, 
-          rgba(0, 0, 0, 0.5) ${blueStart}%, 
-          rgba(0, 0, 255, 0.4) ${blueStart}%, 
-          rgba(0, 0, 255, 0.4) 100%)`;
+        // Обновляем градиент: розовый (игрок 1) заполняется слева направо, синий (игрок 2) справа налево
+        progressEl.style.background = `linear-gradient(90deg,
+          rgba(255, 0, 102, 0.6) 0%,
+          rgba(255, 0, 102, 0.6) ${percentA}%,
+          rgba(0, 0, 0, 0.3) ${percentA}%,
+          rgba(0, 0, 0, 0.3) ${100 - percentB}%,
+          rgba(0, 102, 255, 0.6) ${100 - percentB}%,
+          rgba(0, 102, 255, 0.6) 100%)`;
       }
     };
 
