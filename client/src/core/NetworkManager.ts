@@ -58,7 +58,7 @@ export class NetworkManager {
   constructor(serverUrl?: string) {
     // Локальный сервер для разработки, прод-сервер для production
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    this.serverUrl = serverUrl || (isLocalhost ? 'ws://localhost:2567' : 'wss://cursor-hold-game-server.onrender.com');
+    this.serverUrl = serverUrl || (isLocalhost ? 'ws://localhost:2567' : 'wss://viru5-server.onrender.com');
     this.client = new Client(this.serverUrl);
   }
 
