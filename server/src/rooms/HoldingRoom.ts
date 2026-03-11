@@ -404,7 +404,7 @@ export class HoldingRoom extends Room<RoomState> {
         });
 
         // Check if all players are ready to start the virus battle
-        const allPlayersReady = Array.from(this.state.players.values()).every(p => p.isReady);
+        const allPlayersReady = Array.from(this.state.players.values()).every((p: PlayerSchema) => p.isReady);
         if (allPlayersReady && this.state.players.size === 2) {
           // Start the virus battle simulation
           this.startVirusBattle();
@@ -449,8 +449,8 @@ export class HoldingRoom extends Room<RoomState> {
           });
 
           // Check ALL players
-          const allPlayersMaxed = Array.from(this.state.players.values()).every(p => {
-            return this.calculateTotalPoints(p.virusParams) === 12;
+          const allPlayersMaxed = Array.from(this.state.players.values()).every((p: PlayerSchema) => {
+            return this.calculateTotalPoints(p.virusParams);
           });
 
           console.log(`[SERVER] All players maxed? ${allPlayersMaxed} (players: ${this.state.players.size})`);
@@ -560,7 +560,7 @@ export class HoldingRoom extends Room<RoomState> {
     if (players.length >= 2) {
       // Place viruses based on team number
       for (const player of players) {
-        if (player.team === 1) {
+        if ((player as PlayerSchema).team === 1) {
           // Team 1 (RED) - TOP-LEFT
           const topLeftX = 2;
           const topLeftY = 2;
@@ -568,7 +568,7 @@ export class HoldingRoom extends Room<RoomState> {
           if (topLeftIndex < this.state.vGrid.length) {
             this.state.vGrid[topLeftIndex] = 1; // 1 = VIRUS_A (RED)
           }
-        } else if (player.team === 2) {
+        } else if ((player as PlayerSchema).team === 2) {
           // Team 2 (BLUE) - BOTTOM-RIGHT
           const bottomRightX = GRID_WIDTH - 3;
           const bottomRightY = GRID_HEIGHT - 3;
@@ -638,13 +638,13 @@ export class HoldingRoom extends Room<RoomState> {
   /**
    * Get virus params for a player by team (1 or 2)
    */
-  private getPlayerParams(team: number) {
-    const players = Array.from(this.state.players.values());
-    const player = players.find(p => p.team === team);
+  private getPlayerParams(team: number): Record<string, number> | null {
+    const players = Array.from(this.state.players.values()) as PlayerSchema[];
+    const player = players.find((p: PlayerSchema) => p.team === team);
     if (!player) return null;
 
-    const params: any = {};
-    player.virusParams.forEach((value, key) => {
+    const params: Record<string, number> = {};
+    player.virusParams.forEach((value: number, key: string) => {
       params[key] = value;
     });
     return params;
