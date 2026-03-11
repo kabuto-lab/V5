@@ -977,7 +977,7 @@ export class HoldingRoom extends Room<RoomState> {
   }
 
   private checkWinConditions(): boolean {
-    // Check if one virus has taken over 96% of OCCUPIED cells
+    // Check if one virus has taken over 90% of OCCUPIED cells
     const totalCells = this.state.vGrid.length;
     let virusACount = 0;
     let virusBCount = 0;
@@ -988,7 +988,7 @@ export class HoldingRoom extends Room<RoomState> {
     }
 
     const occupiedCells = virusACount + virusBCount;
-    
+
     // Early game - not enough cells yet
     if (occupiedCells < 10) return false;
 
@@ -996,13 +996,13 @@ export class HoldingRoom extends Room<RoomState> {
     const virusAPercent = (virusACount / occupiedCells) * 100;
     const virusBPercent = (virusBCount / occupiedCells) * 100;
 
-    // Win condition: one virus controls 96% or more of occupied cells
-    if (virusAPercent >= 96) {
+    // Win condition: one virus controls 90% or more of occupied cells
+    if (virusAPercent >= 90) {
       console.log(`Virus A wins with ${virusAPercent.toFixed(2)}% (${virusACount}/${occupiedCells} occupied)`);
       return true;
     }
 
-    if (virusBPercent >= 96) {
+    if (virusBPercent >= 90) {
       console.log(`Virus B wins with ${virusBPercent.toFixed(2)}% (${virusBCount}/${occupiedCells} occupied)`);
       return true;
     }
